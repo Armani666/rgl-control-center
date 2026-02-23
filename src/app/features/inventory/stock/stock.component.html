@@ -1,0 +1,42 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Rose Gold Lexury</p>
+      <h1>Inventario</h1>
+      <p class="muted">Stock actual, alertas y acceso al registro de movimientos.</p>
+    </div>
+  </header>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>SKU</th>
+          <th>Producto</th>
+          <th>Stock actual</th>
+          <th>Stock mínimo</th>
+          <th>Estado</th>
+          <th>Última actualización</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of stockRows$ | async" [ngClass]="{ alert: row.isLowStock }">
+          <td>{{ row.sku || '—' }}</td>
+          <td>{{ row.productName }}</td>
+          <td>{{ row.quantity }}</td>
+          <td>{{ row.minStock }}</td>
+          <td>
+            <span class="pill" [ngClass]="row.isLowStock ? 'warn' : 'ok'">
+              {{ row.isLowStock ? 'Bajo mínimo' : 'Normal' }}
+            </span>
+          </td>
+          <td>{{ row.updatedAt ? (row.updatedAt | date: 'short') : '—' }}</td>
+          <td>
+            <a class="link" [routerLink]="['/stock/move', row.productId]">Registrar movimiento</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

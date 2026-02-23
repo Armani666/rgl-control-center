@@ -1,0 +1,59 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Rose Gold Lexury</p>
+      <h1>{{ isEditMode ? 'Editar producto' : 'Nuevo producto' }}</h1>
+      <p class="muted">Gestiona datos base del catálogo y el stock mínimo de alerta.</p>
+    </div>
+    <a class="btn btn-secondary" routerLink="/products">Volver</a>
+  </header>
+
+  <form class="card form-grid" [formGroup]="form" (ngSubmit)="submit()">
+    <label>
+      SKU
+      <input type="text" formControlName="sku" placeholder="RGL-001" />
+    </label>
+
+    <label>
+      Nombre
+      <input type="text" formControlName="name" placeholder="Anillo Rose Gold" />
+    </label>
+
+    <label>
+      Categoría
+      <input type="text" formControlName="category" placeholder="Anillos" />
+    </label>
+
+    <label>
+      Precio
+      <input type="number" min="0" step="0.01" formControlName="price" />
+    </label>
+
+    <label>
+      Stock mínimo
+      <input type="number" min="0" step="1" formControlName="minStock" />
+    </label>
+
+    <label class="checkbox">
+      <input type="checkbox" formControlName="active" />
+      Activo
+    </label>
+
+    <label class="full">
+      Descripción
+      <textarea rows="4" formControlName="description" placeholder="Detalles del producto"></textarea>
+    </label>
+
+    <div class="full helper" *ngIf="form.invalid && form.touched">
+      Revisa los campos requeridos (`SKU`, `Nombre`, `Precio`, `Stock mínimo`).
+    </div>
+
+    <div class="full helper error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+    <div class="full actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving || loading">
+        {{ saving ? 'Guardando...' : (isEditMode ? 'Actualizar producto' : 'Crear producto') }}
+      </button>
+    </div>
+  </form>
+</section>

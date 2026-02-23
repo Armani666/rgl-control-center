@@ -1,59 +1,81 @@
-# RglControlCenter
+# RGL Control Center (MVP)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.4.
+MVP en Angular (standalone + routing + SCSS) para administrar productos e inventario de **Rose Gold Lexury** con **Supabase (Postgres)**.
 
-## Development server
+## Rutas
 
-To start a local development server, run:
+- `/products`
+- `/products/new`
+- `/products/:id`
+- `/stock`
+- `/stock/move/:productId`
 
-```bash
-ng serve
-```
+## Conectar Supabase
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+1. Crea un proyecto en Supabase (free tier).
+2. En Supabase abre **SQL Editor** y ejecuta `supabase/schema.sql`.
+3. Copia:
+   - `Project URL`
+   - `anon public key`
+4. Pega los valores en:
+   - `src/environments/environment.ts`
+   - `src/environments/environment.prod.ts` (opcional al inicio, puedes repetir los mismos valores)
+5. Inicia la app:
 
 ```bash
-ng build
+npm install
+npm install @supabase/supabase-js
+npm run start
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Login y seguridad (RLS + Auth)
 
-## Running unit tests
+1. En Supabase ve a `Authentication` -> `Providers` y habilita `Email` (email/password).
+2. En la app entra a `/auth/login` y crea tu primera cuenta (o créala desde Supabase Auth).
+3. Vuelve a Supabase `SQL Editor` y ejecuta `supabase/secure-auth-rls.sql`.
+4. Cierra sesión / inicia sesión nuevamente y prueba el flujo.
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Qué hace `secure-auth-rls.sql`:
+- Agrega `owner_id` a `products`, `stock`, `inventory_movements`
+- Restringe datos por usuario autenticado (`authenticated`)
+- Endurece la RPC de inventario para operar solo sobre datos del usuario actual
 
-```bash
-ng test
-```
+## Deploy (Vercel / Netlify)
 
-## Running end-to-end tests
+### Opción A: Vercel
 
-For end-to-end (e2e) testing, run:
+1. Sube este repo a GitHub.
+2. Importa el proyecto en Vercel.
+3. Vercel detectará `vercel.json` y usará:
+   - build: `npm run build`
+   - output: `dist/rgl-control-center/browser`
+4. Antes de deploy, confirma que `src/environments/environment.prod.ts` tenga tu `url` + `anonKey` de Supabase.
 
-```bash
-ng e2e
-```
+### Opción B: Netlify
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+1. Conecta el repo en Netlify.
+2. Netlify leerá `netlify.toml`:
+   - build: `npm run build`
+   - publish: `dist/rgl-control-center/browser`
+3. El redirect SPA (`/* -> /index.html`) ya queda configurado.
+4. Antes de deploy, confirma que `src/environments/environment.prod.ts` tenga tu `url` + `anonKey` de Supabase.
 
-## Additional Resources
+### Variables / claves (importante)
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- La `anon public key` de Supabase se puede usar en frontend (es pública por diseño).
+- No pongas la `service_role` key en Angular.
+- Si quieres evitar commitear valores reales, podemos hacer una segunda iteración con configuración runtime (`app-config.json`) para deploys.
+
+## Notas de seguridad (MVP)
+
+- `supabase/schema.sql` deja políticas RLS abiertas para arranque rápido.
+- `supabase/secure-auth-rls.sql` es el paso recomendado antes de publicar.
+- El control de stock negativo se hace en la función SQL `record_inventory_movement(...)` con transacción en Postgres.
+
+## Probar el flujo (MVP)
+
+1. Entra a `/products/new` y crea un producto (SKU, nombre, precio, stock mínimo).
+2. Ve a `/stock` y entra a **Registrar movimiento** para ese producto.
+3. Registra una **Entrada (IN)** con cantidad mayor a 0.
+4. Verifica que el stock suba y que el movimiento aparezca en el historial.
+5. Intenta una **Salida (OUT)** superior al stock actual para confirmar que se bloquea el stock negativo.

@@ -1,0 +1,44 @@
+<section class="auth-page">
+  <div class="auth-card">
+    <p class="eyebrow">Rose Gold Lexury</p>
+    <h1>Control Center</h1>
+    <p class="muted">Inicia sesión para administrar productos e inventario.</p>
+
+    <div class="mode-switch">
+      <button type="button" [class.active]="mode === 'login'" (click)="setMode('login')">
+        Iniciar sesión
+      </button>
+      <button type="button" [class.active]="mode === 'signup'" (click)="setMode('signup')">
+        Crear cuenta
+      </button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+      <label>
+        Email
+        <input type="email" formControlName="email" placeholder="tu@email.com" />
+      </label>
+
+      <label>
+        Contraseña
+        <input type="password" formControlName="password" placeholder="Min. 6 caracteres" />
+      </label>
+
+      <p class="helper error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <p class="helper success" *ngIf="infoMessage">{{ infoMessage }}</p>
+
+      <button type="submit" class="btn-primary" [disabled]="loading">
+        {{
+          loading
+            ? 'Procesando...'
+            : (mode === 'login' ? 'Entrar' : 'Crear cuenta')
+        }}
+      </button>
+    </form>
+
+    <p class="hint">
+      Usa email/password de Supabase Auth. Habilita el proveedor Email en tu proyecto si aún no está activo.
+    </p>
+    <a routerLink="/products" class="ghost-link">Volver</a>
+  </div>
+</section>

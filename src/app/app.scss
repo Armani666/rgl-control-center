@@ -1,0 +1,130 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.sidebar {
+  background:
+    radial-gradient(circle at top right, rgba(212, 137, 82, 0.18), transparent 60%),
+    linear-gradient(180deg, #fffaf7 0%, #fff 100%);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1rem;
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  position: sticky;
+  top: 1rem;
+  height: calc(100vh - 2rem);
+}
+
+.brand h1 {
+  margin: 0.2rem 0;
+  font-size: 1.25rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-700);
+}
+
+.muted {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.menu {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.menu a {
+  color: var(--text);
+  text-decoration: none;
+  padding: 0.8rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-weight: 600;
+}
+
+.menu a:hover {
+  background: #fff7f2;
+  border-color: #f4ddd0;
+}
+
+.menu a.active {
+  background: #fff1e6;
+  color: var(--accent-800);
+  border-color: #f0d0bd;
+}
+
+.content {
+  min-width: 0;
+}
+
+.session-card {
+  margin-top: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.8rem;
+  background: #fffdfb;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.session-label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.session-email {
+  margin: 0;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.session-btn,
+.session-link {
+  margin-top: 0.3rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.55rem 0.7rem;
+  cursor: pointer;
+  text-align: center;
+}
+
+@media (max-width: 960px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+  }
+
+  .menu {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

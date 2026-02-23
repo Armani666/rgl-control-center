@@ -1,1 +1,33 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --bg: #f6f4f1;
+  --text: #1f1c19;
+  --muted: #6f675f;
+  --border: #eadfd6;
+  --accent-600: #c87442;
+  --accent-700: #aa5d2f;
+  --accent-800: #8d4c23;
+  --shadow-soft: 0 14px 30px rgba(31, 28, 25, 0.06);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(235, 189, 155, 0.22), transparent 32%),
+    radial-gradient(circle at 90% 20%, rgba(212, 137, 82, 0.12), transparent 28%),
+    var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
