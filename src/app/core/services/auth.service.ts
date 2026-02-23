@@ -41,7 +41,7 @@ export class AuthService {
   async signIn(email: string, password: string): Promise<void> {
     assertSupabaseConfigured();
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password
     });
@@ -49,12 +49,14 @@ export class AuthService {
     if (error) {
       throw new Error(error.message);
     }
+
+    this.setSession(data.session);
   }
 
   async signUp(email: string, password: string): Promise<void> {
     assertSupabaseConfigured();
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password
     });
@@ -62,6 +64,8 @@ export class AuthService {
     if (error) {
       throw new Error(error.message);
     }
+
+    this.setSession(data.session ?? null);
   }
 
   async signOut(): Promise<void> {
