@@ -14,6 +14,7 @@ export class App {
   readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   readonly user$ = this.authService.user$;
+  readonly profile$ = this.authService.profile$;
 
   async signOut(): Promise<void> {
     try {
@@ -22,5 +23,17 @@ export class App {
     } catch (error) {
       console.error(error);
     }
+  }
+
+  get canSeeAdminMenu(): boolean {
+    return this.authService.hasAnyRole('super_admin', 'admin');
+  }
+
+  get canSeeProcurementMenu(): boolean {
+    return this.authService.hasAnyRole('super_admin', 'admin', 'almacen');
+  }
+
+  get canSeeSalesMenu(): boolean {
+    return this.authService.hasAnyRole('super_admin', 'admin', 'ventas');
   }
 }

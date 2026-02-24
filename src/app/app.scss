@@ -99,6 +99,14 @@
   word-break: break-word;
 }
 
+.session-role {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .session-btn,
 .session-link {
   margin-top: 0.3rem;
@@ -124,6 +132,12 @@
     height: auto;
   }
 
+  .menu {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
   .menu {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

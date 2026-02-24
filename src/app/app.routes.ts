@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
+import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'products' },
@@ -46,6 +47,40 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/inventory/movement-form/movement-form.component').then(
         (m) => m.MovementFormComponent
+      )
+  },
+  {
+    path: 'stock/movements',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['super_admin', 'admin', 'almacen'] },
+    loadComponent: () =>
+      import('./features/inventory/movement-audit/movement-audit.component').then(
+        (m) => m.MovementAuditComponent
+      )
+  },
+  {
+    path: 'procurement',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['super_admin', 'admin', 'almacen'] },
+    loadComponent: () =>
+      import('./features/procurement/procurement-dashboard/procurement-dashboard.component').then(
+        (m) => m.ProcurementDashboardComponent
+      )
+  },
+  {
+    path: 'admin/users',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['super_admin', 'admin'] },
+    loadComponent: () =>
+      import('./features/admin/users/admin-users.component').then((m) => m.AdminUsersComponent)
+  },
+  {
+    path: 'sales/commissions',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['super_admin', 'admin', 'ventas'] },
+    loadComponent: () =>
+      import('./features/sales/vendor-commissions/vendor-commissions.component').then(
+        (m) => m.VendorCommissionsComponent
       )
   },
   { path: '**', redirectTo: 'products' }

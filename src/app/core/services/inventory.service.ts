@@ -21,6 +21,10 @@ export class InventoryService {
     return this.poll(() => this.fetchMovementsByProduct(productId));
   }
 
+  getAllMovements$(): Observable<InventoryMovement[]> {
+    return this.poll(() => this.fetchAllMovements());
+  }
+
   async createMovement(input: CreateInventoryMovementInput): Promise<void> {
     assertSupabaseConfigured();
 
@@ -87,6 +91,22 @@ export class InventoryService {
     return (data ?? []).map((row: unknown) => this.mapMovement(row as Record<string, unknown>));
   }
 
+  private async fetchAllMovements(): Promise<InventoryMovement[]> {
+    assertSupabaseConfigured();
+
+    const { data, error } = await supabase
+      .from('inventory_movements')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(500);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return (data ?? []).map((row: unknown) => this.mapMovement(row as Record<string, unknown>));
+  }
+
   private poll<T>(loader: () => Promise<T>): Observable<T> {
     return merge(timer(0, 5000), this.refresh$).pipe(switchMap(() => from(loader())));
   }
@@ -108,6 +128,10 @@ export class InventoryService {
       quantity: Number(row['quantity'] ?? 0),
       reason: String(row['reason'] ?? ''),
       note: String(row['note'] ?? ''),
+      stockBefore: row['stock_before'] == null ? null : Number(row['stock_before'] ?? 0),
+      stockAfter: row['stock_after'] == null ? null : Number(row['stock_after'] ?? 0),
+      createdBy: row['created_by'] == null ? '' : String(row['created_by'] ?? ''),
+      createdByEmail: row['created_by_email'] == null ? '' : String(row['created_by_email'] ?? ''),
       createdAt: toDate(row['created_at'])
     };
   }

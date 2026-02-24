@@ -1,0 +1,274 @@
+<section class="commission-page" *ngIf="dashboard$ | async as vm">
+  <header class="hero card">
+    <div class="hero-copy">
+      <p class="eyebrow">Ventas y comisiones</p>
+      <h1>Pago a vendedores</h1>
+      <p class="muted">
+        Registra ventas, calcula comision automaticamente y exporta lo que le toca a cada vendedor.
+      </p>
+    </div>
+    <div class="hero-actions">
+      <button type="button" class="ghost-btn" (click)="exportCsv(vm)">Exportar CSV</button>
+    </div>
+  </header>
+
+  <p class="feedback error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="feedback ok" *ngIf="successMessage">{{ successMessage }}</p>
+
+  <section class="kpi-grid">
+    <article class="kpi card">
+      <p class="kpi-label">Ventas registradas</p>
+      <p class="kpi-value">{{ vm.summary.salesCount }}</p>
+    </article>
+    <article class="kpi card">
+      <p class="kpi-label">Venta total</p>
+      <p class="kpi-value money">{{ vm.summary.totalSalesAmount | currency:'MXN':'symbol':'1.0-0' }}</p>
+    </article>
+    <article class="kpi card lilac">
+      <p class="kpi-label">Comision generada</p>
+      <p class="kpi-value money">{{ vm.summary.totalCommission | currency:'MXN':'symbol':'1.0-0' }}</p>
+    </article>
+    <article class="kpi card mint">
+      <p class="kpi-label">Pagado</p>
+      <p class="kpi-value money">{{ vm.summary.totalPaid | currency:'MXN':'symbol':'1.0-0' }}</p>
+    </article>
+    <article class="kpi card peach">
+      <p class="kpi-label">Pendiente</p>
+      <p class="kpi-value money">{{ vm.summary.totalPending | currency:'MXN':'symbol':'1.0-0' }}</p>
+    </article>
+  </section>
+
+  <section class="filters card">
+    <div class="filters-head">
+      <h2>Corte de comisiones</h2>
+      <p class="muted">Filtra por vendedor y rango de fechas para calcular el pago.</p>
+    </div>
+    <form class="filters-grid" [formGroup]="filterForm">
+      <label class="field">
+        <span>Vendedor</span>
+        <select formControlName="sellerProfileId">
+          <option value="all">Todos</option>
+          <option *ngFor="let seller of vm.sellers" [value]="seller.id">{{ seller.label }}</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Desde</span>
+        <input type="date" formControlName="dateFrom" />
+      </label>
+      <label class="field">
+        <span>Hasta</span>
+        <input type="date" formControlName="dateTo" />
+      </label>
+    </form>
+  </section>
+
+  <section class="forms-grid">
+    <article class="card glass sale-form">
+      <div class="card-head">
+        <h2>Registrar venta</h2>
+        <p class="muted">Base sugerida 10% y 15% cuando el vendedor cumple meta.</p>
+      </div>
+      <form [formGroup]="saleForm" (ngSubmit)="submitSale()" class="grid-form">
+        <label class="field">
+          <span>Vendedor</span>
+          <select formControlName="sellerProfileId">
+            <option value="">Selecciona vendedor</option>
+            <option *ngFor="let seller of vm.sellers" [value]="seller.id">
+              {{ seller.label }} ({{ seller.defaultRate | number:'1.0-2' }}%)
+            </option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Fecha venta</span>
+          <input type="date" formControlName="saleDate" />
+        </label>
+        <label class="toggle-chip">
+          <input type="checkbox" formControlName="goalReached" />
+          <span>
+            <strong>Meta cumplida</strong>
+            <small>Usar 15% (si no, 10% base)</small>
+          </span>
+        </label>
+        <label class="field">
+          <span>Cliente (opcional)</span>
+          <input type="text" formControlName="customerName" placeholder="Nombre del cliente" />
+        </label>
+        <label class="field">
+          <span>Telefono cliente (opcional)</span>
+          <input type="text" formControlName="customerPhone" placeholder="WhatsApp / telefono" />
+        </label>
+        <label class="field">
+          <span>Producto (opcional)</span>
+          <select formControlName="productId">
+            <option value="">Venta manual / varios</option>
+            <option *ngFor="let product of vm.products" [value]="product.id">
+              {{ product.name }} ({{ product.sku || '-' }})
+            </option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Nombre producto / referencia</span>
+          <input type="text" formControlName="productName" placeholder="Ej. Labial matte combo" />
+        </label>
+        <label class="field">
+          <span>Cantidad</span>
+          <input type="number" min="1" formControlName="quantity" />
+        </label>
+        <label class="field">
+          <span>Total venta</span>
+          <input type="number" min="0.01" step="0.01" formControlName="totalAmount" />
+        </label>
+        <label class="field">
+          <span>Comision %</span>
+          <input type="number" min="0" step="0.01" formControlName="commissionRate" />
+        </label>
+        <div class="commission-preview">
+          <span>Comision estimada</span>
+          <strong>{{ estimatedCommission | currency:'MXN':'symbol':'1.2-2' }}</strong>
+        </div>
+        <label class="field full">
+          <span>Nota</span>
+          <textarea rows="3" formControlName="note" placeholder="Opcional: folio, forma de pago, observaciones"></textarea>
+        </label>
+        <div class="form-actions full">
+          <button type="submit" class="primary-btn" [disabled]="savingSale">
+            {{ savingSale ? 'Guardando...' : 'Guardar venta' }}
+          </button>
+        </div>
+      </form>
+    </article>
+
+    <article class="card glass payment-form">
+      <div class="card-head">
+        <h2>Registrar pago de comision</h2>
+        <p class="muted">Lleva control de lo pagado y lo pendiente por vendedor.</p>
+      </div>
+      <form [formGroup]="paymentForm" (ngSubmit)="submitPayment()" class="grid-form">
+        <label class="field">
+          <span>Vendedor</span>
+          <select formControlName="sellerProfileId">
+            <option value="">Selecciona vendedor</option>
+            <option *ngFor="let seller of vm.sellers" [value]="seller.id">{{ seller.label }}</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Fecha pago</span>
+          <input type="date" formControlName="paymentDate" />
+        </label>
+        <label class="field">
+          <span>Monto pagado</span>
+          <input type="number" min="0.01" step="0.01" formControlName="amount" />
+        </label>
+        <label class="field full">
+          <span>Nota</span>
+          <textarea rows="3" formControlName="note" placeholder="Ej. Pago quincena / transferencia"></textarea>
+        </label>
+        <div class="form-actions full">
+          <button type="submit" class="secondary-btn" [disabled]="savingPayment">
+            {{ savingPayment ? 'Guardando...' : 'Guardar pago' }}
+          </button>
+        </div>
+      </form>
+
+      <div class="mini-card">
+        <h3>Consejo</h3>
+        <p>
+          Usa el filtro de corte y luego exporta CSV para enviar el detalle al vendedor por WhatsApp o correo.
+        </p>
+      </div>
+    </article>
+  </section>
+
+  <section class="tables-grid">
+    <article class="card table-panel">
+      <div class="panel-head">
+        <div>
+          <h2>Resumen por vendedor</h2>
+          <p class="muted">Lo que ha vendido, generado y lo que falta por pagar.</p>
+        </div>
+      </div>
+
+      <div class="empty" *ngIf="vm.sellerSummary.length === 0">No hay datos para este corte.</div>
+      <table *ngIf="vm.sellerSummary.length > 0">
+        <thead>
+          <tr>
+            <th>Vendedor</th>
+            <th>Ventas</th>
+            <th>Comision</th>
+            <th>Pagado</th>
+            <th>Pendiente</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of vm.sellerSummary">
+            <td>
+              <div class="cell-stack">
+                <strong>{{ row.sellerName }}</strong>
+                <span>{{ row.sellerEmail || '-' }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-stack compact">
+                <strong>{{ row.salesTotal | currency:'MXN':'symbol':'1.0-0' }}</strong>
+                <span>{{ row.salesCount }} venta(s)</span>
+              </div>
+            </td>
+            <td>{{ row.commissionTotal | currency:'MXN':'symbol':'1.0-0' }}</td>
+            <td>{{ row.paidTotal | currency:'MXN':'symbol':'1.0-0' }}</td>
+            <td>
+              <span class="pill" [ngClass]="row.pending > 0 ? 'peach' : 'mint'">
+                {{ row.pending | currency:'MXN':'symbol':'1.0-0' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </article>
+
+    <article class="card table-panel">
+      <div class="panel-head">
+        <div>
+          <h2>Detalle de ventas (corte)</h2>
+          <p class="muted">Registros que generan comision dentro del rango seleccionado.</p>
+        </div>
+      </div>
+
+      <div class="empty" *ngIf="vm.salesRows.length === 0">No hay ventas en este corte.</div>
+      <table *ngIf="vm.salesRows.length > 0">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Vendedor</th>
+            <th>Cliente</th>
+            <th>Producto</th>
+            <th>Total</th>
+            <th>%</th>
+            <th>Comision</th>
+            <th>PDF</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of vm.salesRows">
+            <td>{{ row.saleDate ? (row.saleDate | date:'shortDate') : '-' }}</td>
+            <td>{{ row.sellerName }}</td>
+            <td>{{ row.customerName || 'Mostrador' }}</td>
+            <td>
+              <div class="cell-stack compact">
+                <strong>{{ row.productName || 'Venta manual' }}</strong>
+                <span>Cant. {{ row.quantity }}</span>
+              </div>
+            </td>
+            <td>{{ row.totalAmount | currency:'MXN':'symbol':'1.0-0' }}</td>
+            <td>{{ row.commissionRate | number:'1.0-2' }}%</td>
+            <td>{{ row.commissionAmount | currency:'MXN':'symbol':'1.0-0' }}</td>
+            <td>
+              <button type="button" class="tiny-btn" (click)="exportClientReceiptPdf(row)">
+                PDF cliente
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </article>
+  </section>
+</section>

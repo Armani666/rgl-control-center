@@ -7,6 +7,10 @@ export interface InventoryMovement {
   quantity: number;
   reason: string;
   note: string;
+  stockBefore?: number | null;
+  stockAfter?: number | null;
+  createdBy?: string;
+  createdByEmail?: string;
   createdAt?: Date | null;
 }
 

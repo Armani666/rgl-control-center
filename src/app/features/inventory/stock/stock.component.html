@@ -1,37 +1,271 @@
-<section class="page">
+<section class="page" *ngIf="vm$ | async as vm">
   <header class="page-header">
     <div>
       <p class="eyebrow">Rose Gold Lexury</p>
       <h1>Inventario</h1>
-      <p class="muted">Stock actual, alertas y acceso al registro de movimientos.</p>
+      <p class="muted">Panel operativo con alertas, graficos y control de gestion de productos.</p>
+    </div>
+    <div class="header-badges">
+      <span class="pill" [ngClass]="isSuperAdmin ? 'ok' : 'warn'">
+        {{ isSuperAdmin ? 'Super admin' : 'Vista limitada' }}
+      </span>
     </div>
   </header>
 
+  <section class="summary-grid">
+    <article class="summary-card">
+      <p class="summary-label">Productos</p>
+      <p class="summary-value">{{ vm.summary.totalProducts }}</p>
+    </article>
+    <article class="summary-card">
+      <p class="summary-label">Unidades totales</p>
+      <p class="summary-value">{{ vm.summary.totalUnits }}</p>
+    </article>
+    <article class="summary-card warn">
+      <p class="summary-label">Bajo minimo</p>
+      <p class="summary-value">{{ vm.summary.lowStockCount }}</p>
+    </article>
+    <article class="summary-card danger">
+      <p class="summary-label">Agotados</p>
+      <p class="summary-value">{{ vm.summary.outOfStockCount }}</p>
+    </article>
+    <article class="summary-card">
+      <p class="summary-label">Categorias</p>
+      <p class="summary-value">{{ vm.summary.categories }}</p>
+    </article>
+    <article class="summary-card">
+      <p class="summary-label">En rango normal</p>
+      <p class="summary-value">{{ vm.summary.healthyCount }}</p>
+    </article>
+  </section>
+
+  <section class="card filters-card">
+    <div class="filters-header">
+      <div>
+        <h2>Filtros de gestion</h2>
+        <p class="muted">Busca productos y enfoca la operacion por estado o categoria.</p>
+      </div>
+      <button type="button" class="ghost-btn" (click)="clearFilters()">Limpiar filtros</button>
+    </div>
+    <div class="filters-grid">
+      <label class="field">
+        <span>Buscar</span>
+        <input
+          type="search"
+          [value]="vm.filters.searchTerm"
+          (input)="updateSearchTerm(($any($event.target)).value)"
+          placeholder="Producto, SKU o categoria"
+        />
+      </label>
+      <label class="field">
+        <span>Estado</span>
+        <select [value]="vm.filters.statusFilter" (change)="updateStatusFilter(($any($event.target)).value)">
+          <option value="all">Todos</option>
+          <option value="ok">Normal</option>
+          <option value="low">Bajo minimo</option>
+          <option value="out">Agotado</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Categoria</span>
+        <select [value]="vm.filters.categoryFilter" (change)="updateCategoryFilter(($any($event.target)).value)">
+          <option value="all">Todas</option>
+          <option *ngFor="let category of vm.filters.categoryOptions" [value]="category">
+            {{ category }}
+          </option>
+        </select>
+      </label>
+    </div>
+    <p class="filters-result">
+      Mostrando <strong>{{ vm.rows.length }}</strong> de <strong>{{ vm.allRowsCount }}</strong> productos
+      ({{ vm.filteredSummary.visibleUnits }} unidades visibles).
+    </p>
+  </section>
+
+  <section class="admin-grid" *ngIf="isSuperAdmin">
+    <article class="card admin-card">
+      <div class="chart-header">
+        <h2>Control super admin</h2>
+        <p class="muted">Resumen para gestionar inventario, equipo y operacion.</p>
+      </div>
+      <div class="status-grid">
+        <div class="status-item danger">
+          <span class="status-label">Criticos</span>
+          <strong>{{ vm.admin.alerts.critical }}</strong>
+          <small>Sin existencias</small>
+        </div>
+        <div class="status-item warn">
+          <span class="status-label">En alerta</span>
+          <strong>{{ vm.admin.alerts.low }}</strong>
+          <small>Bajo minimo</small>
+        </div>
+        <div class="status-item neutral">
+          <span class="status-label">Sin movimiento</span>
+          <strong>{{ vm.admin.alerts.noRecentMovement }}</strong>
+          <small>+7 dias</small>
+        </div>
+        <div class="status-item ok">
+          <span class="status-label">Saludable</span>
+          <strong>{{ vm.admin.alerts.healthy }}</strong>
+          <small>Stock normal</small>
+        </div>
+      </div>
+    </article>
+
+    <article class="card admin-card">
+      <div class="chart-header">
+        <h2>Acciones de gestion</h2>
+        <p class="muted">Atajos recomendados para administracion del catalogo.</p>
+      </div>
+      <div class="action-list">
+        <a class="action-item" *ngFor="let action of vm.admin.quickActions" [routerLink]="action.route">
+          <span class="action-title">{{ action.title }}</span>
+          <span class="action-desc">{{ action.description }}</span>
+        </a>
+      </div>
+    </article>
+  </section>
+
+  <section class="charts-grid">
+    <article class="card chart-card">
+      <div class="chart-header">
+        <h2>Top stock</h2>
+        <p class="muted">Productos con mas unidades (segun filtros)</p>
+      </div>
+      <div class="chart-empty" *ngIf="vm.charts.topStock.length === 0">Sin datos para graficar.</div>
+      <div class="bars" *ngIf="vm.charts.topStock.length > 0">
+        <div class="bar-row" *ngFor="let item of vm.charts.topStock">
+          <div class="bar-meta">
+            <span class="bar-label">{{ item.label }}</span>
+            <span class="bar-hint">{{ item.hint }}</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" [ngClass]="item.tone" [style.width.%]="item.widthPercent"></div>
+          </div>
+          <span class="bar-value">{{ item.value }}</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="card chart-card">
+      <div class="chart-header">
+        <h2>Deficit vs minimo</h2>
+        <p class="muted">Cuanto falta para alcanzar stock minimo (segun filtros)</p>
+      </div>
+      <div class="chart-empty" *ngIf="vm.charts.lowStock.length === 0">No hay productos en alerta.</div>
+      <div class="bars" *ngIf="vm.charts.lowStock.length > 0">
+        <div class="bar-row" *ngFor="let item of vm.charts.lowStock">
+          <div class="bar-meta">
+            <span class="bar-label">{{ item.label }}</span>
+            <span class="bar-hint">{{ item.hint }}</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" [ngClass]="item.tone" [style.width.%]="item.widthPercent"></div>
+          </div>
+          <span class="bar-value">{{ item.value }}</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="card chart-card full-width">
+      <div class="chart-header">
+        <h2>Stock por categoria</h2>
+        <p class="muted">Distribucion de unidades agrupadas (segun filtros)</p>
+      </div>
+      <div class="chart-empty" *ngIf="vm.charts.categories.length === 0">Sin categorias para mostrar.</div>
+      <div class="bars" *ngIf="vm.charts.categories.length > 0">
+        <div class="bar-row" *ngFor="let item of vm.charts.categories">
+          <div class="bar-meta">
+            <span class="bar-label">{{ item.label }}</span>
+            <span class="bar-hint">{{ item.hint }}</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" [ngClass]="item.tone" [style.width.%]="item.widthPercent"></div>
+          </div>
+          <span class="bar-value">{{ item.value }}</span>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="admin-grid" *ngIf="isSuperAdmin">
+    <article class="card chart-card">
+      <div class="chart-header">
+        <h2>Prioridad de reabastecimiento</h2>
+        <p class="muted">Productos a atender primero por deficit.</p>
+      </div>
+      <div class="chart-empty" *ngIf="vm.admin.priorityRestock.length === 0">No hay productos en alerta.</div>
+      <div class="bars" *ngIf="vm.admin.priorityRestock.length > 0">
+        <div class="bar-row" *ngFor="let item of vm.admin.priorityRestock">
+          <div class="bar-meta">
+            <span class="bar-label">{{ item.productName }}</span>
+            <span class="bar-hint">Deficit {{ item.deficit }} | Reorden sugerido {{ item.suggestedReorder }}</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill warn" [style.width.%]="item.minStock > 0 ? (item.deficit / item.minStock) * 100 : 100"></div>
+          </div>
+          <span class="bar-value">{{ item.deficit }}</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="card admin-card">
+      <div class="chart-header">
+        <h2>Salud por categoria</h2>
+        <p class="muted">Categorias con mayor riesgo de faltantes.</p>
+      </div>
+      <div class="mini-table" *ngIf="vm.admin.categoryHealth.length > 0">
+        <div class="mini-row mini-head">
+          <span>Categoria</span>
+          <span>Productos</span>
+          <span>Alerta</span>
+          <span>Unidades</span>
+        </div>
+        <div class="mini-row" *ngFor="let item of vm.admin.categoryHealth">
+          <span>{{ item.category }}</span>
+          <span>{{ item.products }}</span>
+          <span><span class="pill" [ngClass]="item.status">{{ item.low }}</span></span>
+          <span>{{ item.units }}</span>
+        </div>
+      </div>
+      <div class="chart-empty" *ngIf="vm.admin.categoryHealth.length === 0">Sin informacion de categorias.</div>
+    </article>
+  </section>
+
   <div class="card">
-    <table>
+    <div class="table-empty" *ngIf="vm.rows.length === 0">Aun no hay productos para mostrar inventario.</div>
+    <table *ngIf="vm.rows.length > 0">
       <thead>
         <tr>
           <th>SKU</th>
           <th>Producto</th>
           <th>Stock actual</th>
-          <th>Stock mínimo</th>
+          <th>Stock minimo</th>
+          <th>Deficit</th>
           <th>Estado</th>
-          <th>Última actualización</th>
-          <th>Acción</th>
+          <th>Ultima actualizacion</th>
+          <th>Accion</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let row of stockRows$ | async" [ngClass]="{ alert: row.isLowStock }">
-          <td>{{ row.sku || '—' }}</td>
+        <tr *ngFor="let row of vm.rows" [ngClass]="{ alert: row.isLowStock }">
+          <td>{{ row.sku || '-' }}</td>
           <td>{{ row.productName }}</td>
           <td>{{ row.quantity }}</td>
           <td>{{ row.minStock }}</td>
+          <td>{{ row.isLowStock ? (row.minStock - row.quantity > 0 ? row.minStock - row.quantity : 0) : 0 }}</td>
           <td>
-            <span class="pill" [ngClass]="row.isLowStock ? 'warn' : 'ok'">
-              {{ row.isLowStock ? 'Bajo mínimo' : 'Normal' }}
+            <span class="pill" [ngClass]="row.quantity === 0 ? 'danger' : (row.isLowStock ? 'warn' : 'ok')">
+              {{
+                row.quantity === 0
+                  ? 'Agotado'
+                  : row.isLowStock
+                    ? 'Bajo minimo'
+                    : 'Normal'
+              }}
             </span>
           </td>
-          <td>{{ row.updatedAt ? (row.updatedAt | date: 'short') : '—' }}</td>
+          <td>{{ row.updatedAt ? (row.updatedAt | date: 'short') : '-' }}</td>
           <td>
             <a class="link" [routerLink]="['/stock/move', row.productId]">Registrar movimiento</a>
           </td>

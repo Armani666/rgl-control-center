@@ -3,7 +3,7 @@
     <div class="brand">
       <p class="eyebrow">Rose Gold Lexury</p>
       <h1>Control Center</h1>
-      <p class="muted">MVP de productos e inventario con Angular + Supabase.</p>
+      <p class="muted">MVP de productos, inventario y gestion administrativa con Angular + Supabase.</p>
     </div>
 
     <nav class="menu">
@@ -11,18 +11,31 @@
         Productos
       </a>
       <a routerLink="/stock" routerLinkActive="active">Inventario</a>
+      <a routerLink="/stock/movements" routerLinkActive="active" *ngIf="canSeeProcurementMenu">
+        Auditoria
+      </a>
+      <a routerLink="/procurement" routerLinkActive="active" *ngIf="canSeeProcurementMenu">
+        Compras
+      </a>
+      <a routerLink="/sales/commissions" routerLinkActive="active" *ngIf="canSeeSalesMenu">
+        Comisiones
+      </a>
+      <a routerLink="/admin/users" routerLinkActive="active" *ngIf="canSeeAdminMenu">
+        Usuarios
+      </a>
       <a routerLink="/auth/login" routerLinkActive="active">Acceso</a>
     </nav>
 
     <div class="session-card" *ngIf="user$ | async as user; else guestBox">
-      <p class="session-label">Sesión activa</p>
+      <p class="session-label">Sesion activa</p>
       <p class="session-email">{{ user.email }}</p>
-      <button type="button" class="session-btn" (click)="signOut()">Cerrar sesión</button>
+      <p class="session-role" *ngIf="profile$ | async as profile">{{ profile.role }}</p>
+      <button type="button" class="session-btn" (click)="signOut()">Cerrar sesion</button>
     </div>
     <ng-template #guestBox>
       <div class="session-card">
-        <p class="session-label">Sin sesión</p>
-        <a class="session-link" routerLink="/auth/login">Iniciar sesión</a>
+        <p class="session-label">Sin sesion</p>
+        <a class="session-link" routerLink="/auth/login">Iniciar sesion</a>
       </div>
     </ng-template>
   </aside>

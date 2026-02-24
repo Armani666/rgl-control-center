@@ -1,0 +1,153 @@
+.page {
+  display: grid;
+  gap: 1rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-700);
+}
+
+h1 {
+  margin: 0.2rem 0;
+}
+
+.muted {
+  margin: 0;
+  color: var(--muted);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.summary-card, .card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-soft);
+}
+
+.summary-card {
+  padding: 0.9rem 1rem;
+}
+
+.summary-card.in {
+  background: #eefaf4;
+  border-color: #cbead8;
+}
+
+.summary-card.out {
+  background: #fff3ed;
+  border-color: #ffd4bf;
+}
+
+.summary-label {
+  margin: 0;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+}
+
+.summary-value {
+  margin: 0.35rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.filters {
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 0.75rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.field span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+.field input,
+.field select {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+}
+
+.table-card {
+  overflow: auto;
+}
+
+.table-empty {
+  padding: 1rem;
+  color: var(--muted);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 980px;
+}
+
+th, td {
+  padding: 0.8rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: #fffaf7;
+}
+
+.meta {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.meta span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.pill {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.72rem;
+}
+
+.pill.in {
+  background: #e6f7ef;
+  color: #16653c;
+}
+
+.pill.out {
+  background: #ffe8db;
+  color: #9a3e00;
+}
+
+@media (max-width: 900px) {
+  .summary-grid,
+  .filters {
+    grid-template-columns: 1fr;
+  }
+}

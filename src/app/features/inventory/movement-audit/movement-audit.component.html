@@ -1,0 +1,80 @@
+<section class="page" *ngIf="vm$ | async as vm">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Auditoria</p>
+      <h1>Movimientos de inventario</h1>
+      <p class="muted">Bitacora global con entradas, salidas, razones y usuario responsable.</p>
+    </div>
+  </header>
+
+  <section class="summary-grid">
+    <article class="summary-card">
+      <p class="summary-label">Registros</p>
+      <p class="summary-value">{{ vm.totals.total }}</p>
+    </article>
+    <article class="summary-card in">
+      <p class="summary-label">Entradas</p>
+      <p class="summary-value">{{ vm.totals.incoming }}</p>
+    </article>
+    <article class="summary-card out">
+      <p class="summary-label">Salidas</p>
+      <p class="summary-value">{{ vm.totals.outgoing }}</p>
+    </article>
+  </section>
+
+  <section class="card filters">
+    <label class="field">
+      <span>Buscar</span>
+      <input
+        type="search"
+        [value]="vm.filters.search"
+        (input)="updateSearch(($any($event.target)).value)"
+        placeholder="Producto, SKU, razon o correo" />
+    </label>
+    <label class="field">
+      <span>Tipo</span>
+      <select [value]="vm.filters.type" (change)="updateType(($any($event.target)).value)">
+        <option value="all">Todos</option>
+        <option value="IN">Entrada</option>
+        <option value="OUT">Salida</option>
+      </select>
+    </label>
+  </section>
+
+  <div class="card table-card">
+    <div class="table-empty" *ngIf="vm.rows.length === 0">No hay movimientos con esos filtros.</div>
+    <table *ngIf="vm.rows.length > 0">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Producto</th>
+          <th>Tipo</th>
+          <th>Cantidad</th>
+          <th>Stock antes</th>
+          <th>Stock despues</th>
+          <th>Razon</th>
+          <th>Usuario</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of vm.rows">
+          <td>{{ row.createdAt ? (row.createdAt | date: 'short') : '-' }}</td>
+          <td>
+            <div class="meta">
+              <strong>{{ row.productName }}</strong>
+              <span>{{ row.sku }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="pill" [ngClass]="row.type === 'IN' ? 'in' : 'out'">{{ row.type }}</span>
+          </td>
+          <td>{{ row.quantity }}</td>
+          <td>{{ row.stockBefore ?? '-' }}</td>
+          <td>{{ row.stockAfter ?? '-' }}</td>
+          <td>{{ row.reason || '-' }}</td>
+          <td>{{ row.createdByEmail || row.createdBy || '-' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

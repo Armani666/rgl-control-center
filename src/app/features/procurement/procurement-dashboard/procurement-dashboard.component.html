@@ -1,0 +1,197 @@
+<section class="page" *ngIf="vm$ | async as vm">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Compras y proveedores</p>
+      <h1>Abastecimiento inteligente</h1>
+      <p class="muted">Sugerencias de compra, catalogo de proveedores y relacion producto-proveedor.</p>
+    </div>
+  </header>
+
+  <p class="feedback error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="feedback ok" *ngIf="successMessage">{{ successMessage }}</p>
+
+  <section class="summary-grid">
+    <article class="summary-card">
+      <p class="summary-label">Sugerencias</p>
+      <p class="summary-value">{{ vm.summary.suggestions }}</p>
+    </article>
+    <article class="summary-card danger">
+      <p class="summary-label">Criticas</p>
+      <p class="summary-value">{{ vm.summary.critical }}</p>
+    </article>
+    <article class="summary-card warn">
+      <p class="summary-label">Altas</p>
+      <p class="summary-value">{{ vm.summary.high }}</p>
+    </article>
+    <article class="summary-card">
+      <p class="summary-label">Proveedores</p>
+      <p class="summary-value">{{ vm.summary.suppliers }}</p>
+    </article>
+    <article class="summary-card">
+      <p class="summary-label">Productos vinculados</p>
+      <p class="summary-value">{{ vm.summary.linkedProducts }}</p>
+    </article>
+    <article class="summary-card">
+      <p class="summary-label">Presupuesto estimado</p>
+      <p class="summary-value money">{{ vm.summary.estimatedBuyBudget | currency:'MXN':'symbol':'1.0-0' }}</p>
+    </article>
+  </section>
+
+  <section class="grid two">
+    <article class="card form-card">
+      <div class="card-header">
+        <h2>Nuevo proveedor</h2>
+        <p class="muted">Registra tiempos de entrega y datos de contacto.</p>
+      </div>
+      <form [formGroup]="supplierForm" (ngSubmit)="submitSupplier()" class="form-grid">
+        <label class="field">
+          <span>Nombre</span>
+          <input type="text" formControlName="name" />
+        </label>
+        <label class="field">
+          <span>Contacto</span>
+          <input type="text" formControlName="contactName" />
+        </label>
+        <label class="field">
+          <span>Email</span>
+          <input type="email" formControlName="email" />
+        </label>
+        <label class="field">
+          <span>Telefono</span>
+          <input type="text" formControlName="phone" />
+        </label>
+        <label class="field">
+          <span>Lead time (dias)</span>
+          <input type="number" formControlName="leadTimeDays" min="0" />
+        </label>
+        <label class="field full">
+          <span>Notas</span>
+          <textarea rows="3" formControlName="notes"></textarea>
+        </label>
+        <label class="check full">
+          <input type="checkbox" formControlName="active" />
+          <span>Proveedor activo</span>
+        </label>
+        <div class="actions full">
+          <button type="submit" [disabled]="savingSupplier">{{ savingSupplier ? 'Guardando...' : 'Guardar proveedor' }}</button>
+        </div>
+      </form>
+    </article>
+
+    <article class="card form-card">
+      <div class="card-header">
+        <h2>Relacion producto-proveedor</h2>
+        <p class="muted">Define proveedor preferido, costo y compra minima por producto.</p>
+      </div>
+      <form [formGroup]="linkForm" (ngSubmit)="submitProductSupplierLink()" class="form-grid">
+        <label class="field full">
+          <span>Producto</span>
+          <select formControlName="productId">
+            <option value="">Selecciona producto</option>
+            <option *ngFor="let product of vm.products" [value]="product.id">
+              {{ product.name }} ({{ product.sku || '-' }})
+            </option>
+          </select>
+        </label>
+        <label class="field full">
+          <span>Proveedor</span>
+          <select formControlName="supplierId">
+            <option value="">Selecciona proveedor</option>
+            <option *ngFor="let supplier of vm.activeSuppliers" [value]="supplier.id">
+              {{ supplier.name }}
+            </option>
+          </select>
+        </label>
+        <label class="field">
+          <span>SKU proveedor</span>
+          <input type="text" formControlName="supplierSku" />
+        </label>
+        <label class="field">
+          <span>Costo</span>
+          <input type="number" formControlName="cost" min="0" step="0.01" />
+        </label>
+        <label class="field">
+          <span>Min compra</span>
+          <input type="number" formControlName="minOrderQty" min="1" />
+        </label>
+        <label class="check">
+          <input type="checkbox" formControlName="preferred" />
+          <span>Proveedor preferido</span>
+        </label>
+        <div class="actions full">
+          <button type="submit" [disabled]="savingLink">{{ savingLink ? 'Guardando...' : 'Guardar relacion' }}</button>
+        </div>
+      </form>
+    </article>
+  </section>
+
+  <section class="grid two">
+    <article class="card table-card">
+      <div class="card-header">
+        <h2>Top sugerencias de compra</h2>
+        <p class="muted">Calculadas por rotacion, stock minimo y lead time.</p>
+      </div>
+      <div class="table-empty" *ngIf="vm.suggestions.length === 0">No hay sugerencias por ahora.</div>
+      <table *ngIf="vm.suggestions.length > 0">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Prioridad</th>
+            <th>Stock</th>
+            <th>Punto reorden</th>
+            <th>Sugerido</th>
+            <th>Proveedor</th>
+            <th>Costo estimado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of vm.suggestions">
+            <td>
+              <div class="meta">
+                <strong>{{ item.productName }}</strong>
+                <span>{{ item.sku || '-' }} | {{ item.category || 'Sin categoria' }}</span>
+              </div>
+            </td>
+            <td><span class="pill" [ngClass]="item.priority">{{ item.priority }}</span></td>
+            <td>{{ item.currentStock }}</td>
+            <td>{{ item.reorderPoint }}</td>
+            <td>{{ item.recommendedQty }}</td>
+            <td>{{ item.supplierName || 'Sin proveedor' }}</td>
+            <td>{{ item.estimatedTotalCost == null ? '-' : (item.estimatedTotalCost | currency:'MXN':'symbol':'1.0-0') }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </article>
+
+    <article class="card table-card">
+      <div class="card-header">
+        <h2>Proveedores registrados</h2>
+        <p class="muted">Catalogo actual para compras y reabastecimiento.</p>
+      </div>
+      <div class="table-empty" *ngIf="vm.suppliers.length === 0">No hay proveedores.</div>
+      <table *ngIf="vm.suppliers.length > 0">
+        <thead>
+          <tr>
+            <th>Proveedor</th>
+            <th>Contacto</th>
+            <th>Lead time</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let supplier of vm.suppliers">
+            <td>{{ supplier.name }}</td>
+            <td>
+              <div class="meta">
+                <span>{{ supplier.contactName || '-' }}</span>
+                <span>{{ supplier.email || supplier.phone || '-' }}</span>
+              </div>
+            </td>
+            <td>{{ supplier.leadTimeDays }} dias</td>
+            <td><span class="pill" [ngClass]="supplier.active ? 'ok' : 'neutral'">{{ supplier.active ? 'Activo' : 'Inactivo' }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </article>
+  </section>
+</section>

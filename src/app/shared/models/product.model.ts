@@ -5,6 +5,13 @@ export interface Product {
   category: string;
   description: string;
   price: number;
+  cost?: number;
+  barcode?: string;
+  brand?: string;
+  unit?: string;
+  location?: string;
+  supplierId?: string | null;
+  leadTimeDays?: number;
   minStock: number;
   active: boolean;
   createdAt?: Date | null;
@@ -17,6 +24,13 @@ export interface ProductPayload {
   category: string;
   description: string;
   price: number;
+  cost?: number;
+  barcode?: string;
+  brand?: string;
+  unit?: string;
+  location?: string;
+  supplierId?: string | null;
+  leadTimeDays?: number;
   minStock: number;
   active: boolean;
 }
