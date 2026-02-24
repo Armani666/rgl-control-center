@@ -5,6 +5,7 @@ import { combineLatest, map } from 'rxjs';
 
 import { InventoryService } from '../../../core/services/inventory.service';
 import { ProductService } from '../../../core/services/product.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { StockOverview } from '../../../shared/models/stock.model';
 
 interface ProductListRow extends StockOverview {
@@ -20,6 +21,7 @@ interface ProductListRow extends StockOverview {
 export class ProductListComponent {
   private readonly productService = inject(ProductService);
   private readonly inventoryService = inject(InventoryService);
+  private readonly authService = inject(AuthService);
 
   readonly rows$ = combineLatest([
     this.productService.getProducts$(),
@@ -45,4 +47,16 @@ export class ProductListComponent {
       });
     })
   );
+
+  get canCreateProducts(): boolean {
+    return this.authService.canManageProducts();
+  }
+
+  get canEditProducts(): boolean {
+    return this.authService.canManageProducts();
+  }
+
+  get canMoveStock(): boolean {
+    return this.authService.canManageInventory();
+  }
 }

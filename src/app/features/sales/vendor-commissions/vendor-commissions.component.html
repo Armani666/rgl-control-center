@@ -8,7 +8,9 @@
       </p>
     </div>
     <div class="hero-actions">
-      <button type="button" class="ghost-btn" (click)="exportCsv(vm)">Exportar CSV</button>
+      <button *ngIf="canManageCommissionPayments" type="button" class="ghost-btn" (click)="exportCsv(vm)">
+        Exportar CSV
+      </button>
     </div>
   </header>
 
@@ -138,7 +140,7 @@
       </form>
     </article>
 
-    <article class="card glass payment-form">
+    <article class="card glass payment-form" *ngIf="canManageCommissionPayments">
       <div class="card-head">
         <h2>Registrar pago de comision</h2>
         <p class="muted">Lleva control de lo pagado y lo pendiente por vendedor.</p>

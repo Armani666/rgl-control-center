@@ -6,19 +6,20 @@
 .shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: 300px minmax(0, 1fr);
   gap: 1rem;
   padding: 1rem;
 }
 
 .sidebar {
   background:
-    radial-gradient(circle at top right, rgba(212, 137, 82, 0.18), transparent 60%),
-    linear-gradient(180deg, #fffaf7 0%, #fff 100%);
+    radial-gradient(circle at 88% 10%, rgba(152, 102, 255, 0.18), transparent 48%),
+    radial-gradient(circle at 18% 100%, rgba(231, 180, 255, 0.13), transparent 42%),
+    linear-gradient(180deg, #fbf8ff 0%, #fff 100%);
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: 24px;
   padding: 1rem;
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow-strong);
   display: grid;
   align-content: start;
   gap: 1rem;
@@ -27,17 +28,57 @@
   height: calc(100vh - 2rem);
 }
 
+.brand-top {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.logo-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.32), transparent 42%),
+    linear-gradient(160deg, #9a67ff, #6c31e8 58%, #4f23b8);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 10px 20px rgba(86, 37, 189, 0.22);
+}
+
+.logo-ring {
+  position: absolute;
+  inset: 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.logo-text {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+}
+
 .brand h1 {
-  margin: 0.2rem 0;
-  font-size: 1.25rem;
+  margin: 0.15rem 0 0;
+  font-size: 1.2rem;
+  line-height: 1.1;
 }
 
 .eyebrow {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   color: var(--accent-700);
+  font-weight: 800;
 }
 
 .muted {
@@ -49,26 +90,39 @@
 .menu {
   display: grid;
   gap: 0.5rem;
+  padding: 0.25rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(234, 223, 247, 0.75);
+}
+
+.menu.guest-only {
+  grid-template-columns: 1fr;
 }
 
 .menu a {
   color: var(--text);
   text-decoration: none;
   padding: 0.8rem 0.9rem;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid transparent;
-  font-weight: 600;
+  font-weight: 700;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
 }
 
 .menu a:hover {
-  background: #fff7f2;
-  border-color: #f4ddd0;
+  background: #f8f2ff;
+  border-color: #e7d8fb;
+  transform: translateY(-1px);
 }
 
 .menu a.active {
-  background: #fff1e6;
+  background:
+    radial-gradient(circle at 90% 20%, rgba(155, 102, 255, 0.16), transparent 46%),
+    linear-gradient(180deg, #f7f2ff, #efe7ff);
   color: var(--accent-800);
-  border-color: #f0d0bd;
+  border-color: #d9c6fb;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .content {
@@ -78,11 +132,14 @@
 .session-card {
   margin-top: auto;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 18px;
   padding: 0.8rem;
-  background: #fffdfb;
+  background:
+    radial-gradient(circle at 88% 14%, rgba(154, 103, 255, 0.08), transparent 42%),
+    #fff;
   display: grid;
   gap: 0.35rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .session-label {
@@ -110,9 +167,9 @@
 .session-btn,
 .session-link {
   margin-top: 0.3rem;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid var(--border);
-  background: white;
+  background: linear-gradient(180deg, #fff, #faf5ff);
   color: var(--text);
   font: inherit;
   font-weight: 600;
@@ -120,6 +177,11 @@
   padding: 0.55rem 0.7rem;
   cursor: pointer;
   text-align: center;
+}
+
+.session-btn:hover,
+.session-link:hover {
+  border-color: #dccbf9;
 }
 
 @media (max-width: 960px) {
@@ -138,6 +200,14 @@
 }
 
 @media (max-width: 640px) {
+  .shell {
+    padding: 0.75rem;
+  }
+
+  .sidebar {
+    border-radius: 20px;
+  }
+
   .menu {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

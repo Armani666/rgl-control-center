@@ -127,63 +127,78 @@
   </section>
 
   <section class="charts-grid">
-    <article class="card chart-card">
+    <article class="card chart-card chart-top-stock">
       <div class="chart-header">
-        <h2>Top stock</h2>
+        <div class="chart-title-row">
+          <h2>Top stock</h2>
+          <span class="chart-tag">Ranking</span>
+        </div>
         <p class="muted">Productos con mas unidades (segun filtros)</p>
       </div>
       <div class="chart-empty" *ngIf="vm.charts.topStock.length === 0">Sin datos para graficar.</div>
-      <div class="bars" *ngIf="vm.charts.topStock.length > 0">
-        <div class="bar-row" *ngFor="let item of vm.charts.topStock">
-          <div class="bar-meta">
-            <span class="bar-label">{{ item.label }}</span>
-            <span class="bar-hint">{{ item.hint }}</span>
-          </div>
-          <div class="bar-track">
-            <div class="bar-fill" [ngClass]="item.tone" [style.width.%]="item.widthPercent"></div>
-          </div>
-          <span class="bar-value">{{ item.value }}</span>
-        </div>
+      <div class="apex-wrap" *ngIf="vm.charts.topStock.length > 0">
+        <apx-chart
+          [series]="vm.apex.topStock.series"
+          [chart]="vm.apex.topStock.chart"
+          [plotOptions]="vm.apex.topStock.plotOptions"
+          [dataLabels]="vm.apex.topStock.dataLabels"
+          [xaxis]="vm.apex.topStock.xaxis"
+          [grid]="vm.apex.topStock.grid"
+          [tooltip]="vm.apex.topStock.tooltip"
+          [stroke]="vm.apex.topStock.stroke"
+          [legend]="vm.apex.topStock.legend"
+          [colors]="vm.apex.topStock.colors">
+        </apx-chart>
       </div>
     </article>
 
-    <article class="card chart-card">
+    <article class="card chart-card chart-deficit">
       <div class="chart-header">
-        <h2>Deficit vs minimo</h2>
+        <div class="chart-title-row">
+          <h2>Deficit vs minimo</h2>
+          <span class="chart-tag warn">Riesgo</span>
+        </div>
         <p class="muted">Cuanto falta para alcanzar stock minimo (segun filtros)</p>
       </div>
       <div class="chart-empty" *ngIf="vm.charts.lowStock.length === 0">No hay productos en alerta.</div>
-      <div class="bars" *ngIf="vm.charts.lowStock.length > 0">
-        <div class="bar-row" *ngFor="let item of vm.charts.lowStock">
-          <div class="bar-meta">
-            <span class="bar-label">{{ item.label }}</span>
-            <span class="bar-hint">{{ item.hint }}</span>
-          </div>
-          <div class="bar-track">
-            <div class="bar-fill" [ngClass]="item.tone" [style.width.%]="item.widthPercent"></div>
-          </div>
-          <span class="bar-value">{{ item.value }}</span>
-        </div>
+      <div class="apex-wrap" *ngIf="vm.charts.lowStock.length > 0">
+        <apx-chart
+          [series]="vm.apex.lowStock.series"
+          [chart]="vm.apex.lowStock.chart"
+          [plotOptions]="vm.apex.lowStock.plotOptions"
+          [dataLabels]="vm.apex.lowStock.dataLabels"
+          [xaxis]="vm.apex.lowStock.xaxis"
+          [grid]="vm.apex.lowStock.grid"
+          [tooltip]="vm.apex.lowStock.tooltip"
+          [stroke]="vm.apex.lowStock.stroke"
+          [legend]="vm.apex.lowStock.legend"
+          [colors]="vm.apex.lowStock.colors">
+        </apx-chart>
       </div>
     </article>
 
-    <article class="card chart-card full-width">
+    <article class="card chart-card full-width chart-categories">
       <div class="chart-header">
-        <h2>Stock por categoria</h2>
+        <div class="chart-title-row">
+          <h2>Stock por categoria</h2>
+          <span class="chart-tag neutral">Distribucion</span>
+        </div>
         <p class="muted">Distribucion de unidades agrupadas (segun filtros)</p>
       </div>
       <div class="chart-empty" *ngIf="vm.charts.categories.length === 0">Sin categorias para mostrar.</div>
-      <div class="bars" *ngIf="vm.charts.categories.length > 0">
-        <div class="bar-row" *ngFor="let item of vm.charts.categories">
-          <div class="bar-meta">
-            <span class="bar-label">{{ item.label }}</span>
-            <span class="bar-hint">{{ item.hint }}</span>
-          </div>
-          <div class="bar-track">
-            <div class="bar-fill" [ngClass]="item.tone" [style.width.%]="item.widthPercent"></div>
-          </div>
-          <span class="bar-value">{{ item.value }}</span>
-        </div>
+      <div class="apex-wrap donut" *ngIf="vm.charts.categories.length > 0">
+        <apx-chart
+          [series]="vm.apex.categories.series"
+          [chart]="vm.apex.categories.chart"
+          [labels]="vm.apex.categories.labels"
+          [legend]="vm.apex.categories.legend"
+          [dataLabels]="vm.apex.categories.dataLabels"
+          [tooltip]="vm.apex.categories.tooltip"
+          [stroke]="vm.apex.categories.stroke"
+          [fill]="vm.apex.categories.fill"
+          [colors]="vm.apex.categories.colors"
+          [responsive]="vm.apex.categories.responsive">
+        </apx-chart>
       </div>
     </article>
   </section>
@@ -267,7 +282,10 @@
           </td>
           <td>{{ row.updatedAt ? (row.updatedAt | date: 'short') : '-' }}</td>
           <td>
-            <a class="link" [routerLink]="['/stock/move', row.productId]">Registrar movimiento</a>
+            <a *ngIf="canRegisterMovement; else noMovePermission" class="link" [routerLink]="['/stock/move', row.productId]">
+              Registrar movimiento
+            </a>
+            <ng-template #noMovePermission>-</ng-template>
           </td>
         </tr>
       </tbody>

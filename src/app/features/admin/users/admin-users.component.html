@@ -52,9 +52,14 @@
           <td>
             <select
               [value]="profile.role"
-              [disabled]="busyUserId === profile.id"
+              [disabled]="busyUserId === profile.id || !canEditProfile(profile)"
               (change)="onRoleChange(profile.id, ($any($event.target)).value)">
-              <option *ngFor="let role of roles" [value]="role">{{ roleLabels[role] }}</option>
+              <option
+                *ngFor="let role of roles"
+                [value]="role"
+                [disabled]="!canAssignRole(role)">
+                {{ roleLabels[role] }}
+              </option>
             </select>
           </td>
           <td>
@@ -67,7 +72,7 @@
             <button
               type="button"
               class="ghost"
-              [disabled]="busyUserId === profile.id"
+              [disabled]="busyUserId === profile.id || !canEditProfile(profile)"
               (click)="onToggleActive(profile.id, profile.active)">
               {{ profile.active ? 'Desactivar' : 'Activar' }}
             </button>

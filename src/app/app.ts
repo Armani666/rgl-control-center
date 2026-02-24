@@ -30,10 +30,18 @@ export class App {
   }
 
   get canSeeProcurementMenu(): boolean {
-    return this.authService.hasAnyRole('super_admin', 'admin', 'almacen');
+    return this.authService.canManageProcurement();
   }
 
   get canSeeSalesMenu(): boolean {
-    return this.authService.hasAnyRole('super_admin', 'admin', 'ventas');
+    return this.authService.canRegisterSales();
+  }
+
+  get canSeeProductsMenu(): boolean {
+    return this.authService.canManageProducts();
+  }
+
+  get canSeeInventoryMenu(): boolean {
+    return this.authService.canManageInventory();
   }
 }

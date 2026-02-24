@@ -1,0 +1,174 @@
+<section class="biz-page" *ngIf="vm$ | async as vm">
+  <header class="hero card">
+    <div>
+      <p class="eyebrow">Dashboard de negocio</p>
+      <h1>Como vamos</h1>
+      <p class="muted">
+        Seguimiento semanal, mensual y anual de ventas, comisiones e inventario.
+      </p>
+    </div>
+    <div class="period-switch">
+      <button
+        type="button"
+        *ngFor="let period of periods"
+        [class.active]="vm.period === period.key"
+        (click)="setPeriod(period.key)">
+        <span>{{ period.label }}</span>
+        <small>{{ period.subtitle }}</small>
+      </button>
+    </div>
+  </header>
+
+  <section class="kpi-grid">
+    <article class="kpi card">
+      <p class="label">Ventas</p>
+      <p class="value">{{ vm.summary.salesAmount | currency:'MXN':'symbol':'1.0-0' }}</p>
+      <p class="meta" [ngClass]="!vm.summary.salesDeltaComparable ? 'neutral' : (vm.summary.salesDeltaPct! >= 0 ? 'up' : 'down')">
+        <ng-container *ngIf="!vm.summary.salesDeltaComparable; else deltaTpl">Sin comparativo previo</ng-container>
+        <ng-template #deltaTpl>
+          {{ vm.summary.salesDeltaPct! >= 0 ? '▲' : '▼' }}
+          {{ vm.summary.salesDeltaPctAbs | number:'1.0-1' }}%
+          vs periodo anterior
+        </ng-template>
+      </p>
+    </article>
+
+    <article class="kpi card">
+      <p class="label">Tickets</p>
+      <p class="value">{{ vm.summary.orderCount }}</p>
+      <p class="meta neutral">Promedio {{ vm.summary.averageTicket | currency:'MXN':'symbol':'1.0-0' }}</p>
+    </article>
+
+    <article class="kpi card lilac">
+      <p class="label">Comision generada</p>
+      <p class="value">{{ vm.summary.commissionGenerated | currency:'MXN':'symbol':'1.0-0' }}</p>
+      <p class="meta neutral">Pagado {{ vm.summary.commissionPaid | currency:'MXN':'symbol':'1.0-0' }}</p>
+    </article>
+
+    <article class="kpi card peach">
+      <p class="label">Pendiente comision</p>
+      <p class="value">{{ vm.summary.commissionPending | currency:'MXN':'symbol':'1.0-0' }}</p>
+      <p class="meta neutral">Unidades vendidas {{ vm.summary.unitsSold }}</p>
+    </article>
+
+    <article class="kpi card mint">
+      <p class="label">Inventario alerta</p>
+      <p class="value">{{ vm.summary.lowStockCount }}</p>
+      <p class="meta neutral">{{ vm.summary.outOfStockCount }} agotados | {{ vm.summary.activeProducts }} activos</p>
+    </article>
+  </section>
+
+  <section class="charts-grid">
+    <article class="card chart-card wide">
+      <div class="card-head">
+        <h2>Tendencia del periodo</h2>
+        <p class="muted">Ventas vs comisiones en el corte {{ vm.periodMeta.label.toLowerCase() }}.</p>
+      </div>
+      <div class="chart-wrap">
+        <apx-chart
+          [series]="vm.charts.trend.series"
+          [chart]="vm.charts.trend.chart"
+          [xaxis]="vm.charts.trend.xaxis"
+          [yaxis]="vm.charts.trend.yaxis"
+          [grid]="vm.charts.trend.grid"
+          [stroke]="vm.charts.trend.stroke"
+          [fill]="vm.charts.trend.fill"
+          [tooltip]="vm.charts.trend.tooltip"
+          [dataLabels]="vm.charts.trend.dataLabels"
+          [legend]="vm.charts.trend.legend"
+          [colors]="vm.charts.trend.colors">
+        </apx-chart>
+      </div>
+    </article>
+
+    <article class="card chart-card">
+      <div class="card-head">
+        <h2>Ventas por vendedor</h2>
+        <p class="muted">Ranking de vendedores en el periodo.</p>
+      </div>
+      <div class="empty" *ngIf="vm.sellers.length === 0">Sin ventas registradas para este periodo.</div>
+      <div class="chart-wrap" *ngIf="vm.sellers.length > 0">
+        <apx-chart
+          [series]="vm.charts.sellerSales.series"
+          [chart]="vm.charts.sellerSales.chart"
+          [plotOptions]="vm.charts.sellerSales.plotOptions"
+          [dataLabels]="vm.charts.sellerSales.dataLabels"
+          [xaxis]="vm.charts.sellerSales.xaxis"
+          [grid]="vm.charts.sellerSales.grid"
+          [tooltip]="vm.charts.sellerSales.tooltip"
+          [stroke]="vm.charts.sellerSales.stroke"
+          [legend]="vm.charts.sellerSales.legend"
+          [colors]="vm.charts.sellerSales.colors">
+        </apx-chart>
+      </div>
+    </article>
+
+    <article class="card chart-card">
+      <div class="card-head">
+        <h2>Ventas por categoria</h2>
+        <p class="muted">Participacion de categorias en el ingreso.</p>
+      </div>
+      <div class="empty" *ngIf="vm.charts.categorySales.series.length === 0">
+        No hay categorias con ventas en este periodo.
+      </div>
+      <div class="chart-wrap donut" *ngIf="vm.charts.categorySales.series.length > 0">
+        <apx-chart
+          [series]="vm.charts.categorySales.series"
+          [chart]="vm.charts.categorySales.chart"
+          [labels]="vm.charts.categorySales.labels"
+          [legend]="vm.charts.categorySales.legend"
+          [dataLabels]="vm.charts.categorySales.dataLabels"
+          [tooltip]="vm.charts.categorySales.tooltip"
+          [stroke]="vm.charts.categorySales.stroke"
+          [fill]="vm.charts.categorySales.fill"
+          [colors]="vm.charts.categorySales.colors"
+          [responsive]="vm.charts.categorySales.responsive">
+        </apx-chart>
+      </div>
+    </article>
+  </section>
+
+  <section class="bottom-grid">
+    <article class="card insights-card">
+      <div class="card-head">
+        <h2>Lectura rapida</h2>
+        <p class="muted">Resumen de lo mas importante del corte actual.</p>
+      </div>
+      <div class="insights-list">
+        <div class="insight-item" *ngFor="let insight of vm.quickInsights; let i = index">
+          <span class="bullet">{{ i + 1 }}</span>
+          <p>{{ insight }}</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="card table-card">
+      <div class="card-head">
+        <h2>Top productos del periodo</h2>
+        <p class="muted">Los productos que mas movieron ingreso.</p>
+      </div>
+      <div class="empty" *ngIf="vm.topProducts.length === 0">No hay ventas para mostrar.</div>
+      <table *ngIf="vm.topProducts.length > 0">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Unidades</th>
+            <th>Ventas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of vm.topProducts; let i = index">
+            <td>
+              <div class="cell-stack">
+                <strong>#{{ i + 1 }} {{ item.product }}</strong>
+                <span>Producto estrella del periodo</span>
+              </div>
+            </td>
+            <td>{{ item.units }}</td>
+            <td>{{ item.sales | currency:'MXN':'symbol':'1.0-0' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </article>
+  </section>
+</section>

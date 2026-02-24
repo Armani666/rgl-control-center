@@ -2,6 +2,21 @@ import { AsyncPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BehaviorSubject, combineLatest, map } from 'rxjs';
+import {
+  ApexAxisChartSeries,
+  ApexChart,
+  ApexDataLabels,
+  ApexFill,
+  ApexGrid,
+  ApexLegend,
+  ApexNonAxisChartSeries,
+  ApexPlotOptions,
+  ApexResponsive,
+  ApexStroke,
+  ApexTooltip,
+  ApexXAxis,
+  ChartComponent
+} from 'ng-apexcharts';
 
 import { InventoryService } from '../../../core/services/inventory.service';
 import { ProductService } from '../../../core/services/product.service';
@@ -10,7 +25,7 @@ import { StockOverview } from '../../../shared/models/stock.model';
 
 @Component({
   selector: 'app-stock',
-  imports: [AsyncPipe, DatePipe, NgClass, NgFor, NgIf, RouterLink],
+  imports: [AsyncPipe, DatePipe, NgClass, NgFor, NgIf, RouterLink, ChartComponent],
   templateUrl: './stock.component.html',
   styleUrl: './stock.component.scss'
 })
@@ -23,7 +38,11 @@ export class StockComponent {
   private readonly categoryFilter$ = new BehaviorSubject<string>('all');
 
   get isSuperAdmin(): boolean {
-    return this.authService.hasAnyRole('super_admin', 'admin');
+    return this.authService.hasRole('super_admin');
+  }
+
+  get canRegisterMovement(): boolean {
+    return this.authService.canManageInventory();
   }
 
   readonly vm$ = combineLatest([
@@ -196,6 +215,21 @@ export class StockComponent {
           lowStock: lowStockChart,
           categories: categoryChart
         },
+        apex: {
+          topStock: buildHorizontalBarChart(topStockChart, {
+            valueLabel: 'Unidades',
+            colors: topStockChart.map((item) =>
+              item.tone === 'warn' ? '#F57F39' : '#6D3BFF'
+            )
+          }),
+          lowStock: buildHorizontalBarChart(lowStockChart, {
+            valueLabel: 'Deficit',
+            colors: lowStockChart.map((item) =>
+              item.value >= 8 ? '#EF476F' : item.value >= 4 ? '#F57F39' : '#A46CFF'
+            )
+          }),
+          categories: buildDonutChart(categoryChart)
+        },
         admin: {
           alerts: {
             critical: outOfStockCount,
@@ -260,13 +294,175 @@ interface ChartBar extends ChartInput {
   widthPercent: number;
 }
 
+interface HorizontalBarChartConfig {
+  series: ApexAxisChartSeries;
+  chart: ApexChart;
+  plotOptions: ApexPlotOptions;
+  dataLabels: ApexDataLabels;
+  xaxis: ApexXAxis;
+  grid: ApexGrid;
+  tooltip: ApexTooltip;
+  stroke: ApexStroke;
+  colors: string[];
+  legend: ApexLegend;
+}
+
+interface DonutChartConfig {
+  series: ApexNonAxisChartSeries;
+  chart: ApexChart;
+  labels: string[];
+  legend: ApexLegend;
+  dataLabels: ApexDataLabels;
+  tooltip: ApexTooltip;
+  stroke: ApexStroke;
+  fill: ApexFill;
+  colors: string[];
+  responsive: ApexResponsive[];
+}
+
 function toBars(items: ChartInput[]): ChartBar[] {
   const maxValue = Math.max(1, ...items.map((item) => item.value));
- 
+
   return items.map((item) => ({
     ...item,
-    widthPercent: Math.max(4, Math.round((item.value / maxValue) * 100))
+    widthPercent:
+      item.value <= 0 ? 0 : Math.max(8, Math.round((item.value / maxValue) * 100))
   }));
+}
+
+function buildHorizontalBarChart(
+  items: ChartBar[],
+  options: { colors: string[]; valueLabel: string }
+): HorizontalBarChartConfig {
+  const labels = items.map((item) => item.label);
+  const values = items.map((item) => item.value);
+
+  return {
+    series: [{ name: options.valueLabel, data: values }],
+    chart: {
+      type: 'bar',
+      height: Math.max(240, items.length * 52),
+      toolbar: { show: false },
+      sparkline: { enabled: false },
+      fontFamily: 'inherit',
+      animations: { enabled: true }
+    },
+    plotOptions: {
+      bar: {
+        horizontal: true,
+        borderRadius: 8,
+        borderRadiusApplication: 'end',
+        barHeight: '48%',
+        distributed: true
+      }
+    },
+    dataLabels: {
+      enabled: true,
+      style: {
+        fontSize: '12px',
+        fontWeight: 700,
+        colors: ['#2c1f3b']
+      },
+      formatter: (value: number) => `${Math.round(value)}`
+    },
+    xaxis: {
+      categories: labels,
+      labels: {
+        style: {
+          colors: Array(labels.length).fill('#7b6f8b'),
+          fontSize: '11px'
+        }
+      },
+      axisBorder: { show: false },
+      axisTicks: { show: false }
+    },
+    grid: {
+      borderColor: '#eee4fa',
+      strokeDashArray: 4,
+      padding: { left: 8, right: 8, top: 0, bottom: 0 },
+      xaxis: { lines: { show: true } },
+      yaxis: { lines: { show: false } }
+    },
+    tooltip: {
+      theme: 'light',
+      y: {
+        formatter: (value: number) => `${value} ${options.valueLabel.toLowerCase()}`
+      }
+    },
+    stroke: {
+      show: true,
+      width: 1,
+      colors: ['rgba(255,255,255,0.65)']
+    },
+    colors: options.colors.length ? options.colors : ['#7D50F5'],
+    legend: { show: false }
+  };
+}
+
+function buildDonutChart(items: ChartBar[]): DonutChartConfig {
+  const labels = items.map((item) => item.label);
+  const series = items.map((item) => item.value) as ApexNonAxisChartSeries;
+  const palette = ['#7D50F5', '#A46CFF', '#5FD7B6', '#F8A25E', '#EF7091', '#6EC1FF'];
+
+  return {
+    series,
+    chart: {
+      type: 'donut',
+      height: 300,
+      toolbar: { show: false },
+      fontFamily: 'inherit'
+    },
+    labels,
+    legend: {
+      position: 'bottom',
+      fontSize: '12px',
+      labels: { colors: '#6f6482' as any },
+      itemMargin: { horizontal: 10, vertical: 4 }
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: (_value: number, opts?: { seriesIndex?: number }) => {
+        const index = opts?.seriesIndex ?? 0;
+        return `${series[index] ?? 0}`;
+      },
+      style: {
+        fontSize: '12px',
+        fontWeight: 700,
+        colors: ['#ffffff']
+      }
+    },
+    tooltip: {
+      theme: 'light',
+      y: {
+        formatter: (value: number) => `${value} unidades`
+      }
+    },
+    stroke: {
+      width: 3,
+      colors: ['#ffffff']
+    },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shade: 'light',
+        type: 'vertical',
+        shadeIntensity: 0.15,
+        opacityFrom: 1,
+        opacityTo: 0.85,
+        stops: [0, 100]
+      }
+    },
+    colors: labels.map((_, index) => palette[index % palette.length]),
+    responsive: [
+      {
+        breakpoint: 640,
+        options: {
+          chart: { height: 260 },
+          legend: { position: 'bottom' }
+        }
+      }
+    ]
+  };
 }
 
 function normalizeText(value: string): string {

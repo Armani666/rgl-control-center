@@ -7,6 +7,7 @@ import { combineLatest, map, switchMap } from 'rxjs';
 
 import { InventoryService } from '../../../core/services/inventory.service';
 import { ProductService } from '../../../core/services/product.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { MovementType } from '../../../shared/models/inventory-movement.model';
 
 @Component({
@@ -20,6 +21,7 @@ export class MovementFormComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly inventoryService = inject(InventoryService);
   private readonly productService = inject(ProductService);
+  private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly form = this.fb.nonNullable.group({
@@ -33,6 +35,10 @@ export class MovementFormComponent {
   saving = false;
   errorMessage = '';
   successMessage = '';
+
+  get canEditProduct(): boolean {
+    return this.authService.hasAnyRole('super_admin', 'admin');
+  }
 
   readonly productId$ = this.route.paramMap.pipe(
     map((params) => {

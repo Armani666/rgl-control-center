@@ -259,10 +259,10 @@ with check (id = auth.uid() or public.is_admin_like());
 
 create policy profiles_update on public.profiles
 for update to authenticated
-using (id = auth.uid() or public.is_admin_like())
+using (id = auth.uid() or public.is_super_admin())
 with check (
   (id = auth.uid() and role = (select role from public.profiles where id = auth.uid()))
-  or public.is_admin_like()
+  or public.is_super_admin()
 );
 
 -- Auditoria de movimientos
@@ -289,7 +289,10 @@ drop policy if exists inventory_movements_insert_own on public.inventory_movemen
 
 create policy products_select_role on public.products
 for select to authenticated
-using (owner_id = auth.uid() or public.is_admin_like());
+using (
+  owner_id = auth.uid()
+  or public.current_user_role() in ('super_admin', 'admin', 'almacen', 'ventas')
+);
 
 create policy products_insert_role on public.products
 for insert to authenticated
@@ -308,11 +311,14 @@ with check (
 
 create policy products_delete_role on public.products
 for delete to authenticated
-using (public.is_admin_like());
+using (public.is_super_admin());
 
 create policy stock_select_role on public.stock
 for select to authenticated
-using (owner_id = auth.uid() or public.is_admin_like());
+using (
+  owner_id = auth.uid()
+  or public.current_user_role() in ('super_admin', 'admin', 'almacen')
+);
 
 create policy stock_insert_role on public.stock
 for insert to authenticated
@@ -331,7 +337,10 @@ with check (
 
 create policy inventory_movements_select_role on public.inventory_movements
 for select to authenticated
-using (owner_id = auth.uid() or public.is_admin_like());
+using (
+  owner_id = auth.uid()
+  or public.current_user_role() in ('super_admin', 'admin', 'almacen')
+);
 
 create policy inventory_movements_insert_blocked on public.inventory_movements
 for insert to authenticated
@@ -557,9 +566,9 @@ revoke execute on function public.record_inventory_movement(uuid, text, integer,
 from anon;
 
 -- Para asignar tu cuenta como super admin (ejecutar manualmente con tu email):
--- update public.profiles
--- set role = 'super_admin', active = true, updated_at = now()
--- where email = 'tu-correo@dominio.com';
+update public.profiles
+set role = 'super_admin', active = true, updated_at = now()
+ where email = 'abiram_sanser@hotmail.com';
 
 -- =========================================================
 -- EXTENSION V3: ventas y comisiones de vendedores (simple)

@@ -15,6 +15,7 @@ import { combineLatest, map, startWith } from 'rxjs';
 import { ProductService } from '../../../core/services/product.service';
 import { SalesCommissionService } from '../../../core/services/sales-commission.service';
 import { UserAdminService } from '../../../core/services/user-admin.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 const BASE_COMMISSION_RATE = 10;
 const GOAL_COMMISSION_RATE = 15;
@@ -39,6 +40,7 @@ export class VendorCommissionsComponent {
   private readonly salesCommissionService = inject(SalesCommissionService);
   private readonly userAdminService = inject(UserAdminService);
   private readonly productService = inject(ProductService);
+  private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly saleForm = this.fb.nonNullable.group({
@@ -124,6 +126,10 @@ export class VendorCommissionsComponent {
     const total = Number(raw.totalAmount || 0);
     const rate = Number(raw.commissionRate || 0);
     return Number.isFinite(total) && Number.isFinite(rate) ? Number(((total * rate) / 100).toFixed(2)) : 0;
+  }
+
+  get canManageCommissionPayments(): boolean {
+    return this.authService.hasAnyRole('super_admin', 'admin');
   }
 
   async submitSale(): Promise<void> {

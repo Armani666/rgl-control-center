@@ -50,11 +50,31 @@ export class AuthService {
     return !!profile && roles.includes(profile.role);
   }
 
+  hasRole(role: UserRole): boolean {
+    return this.profileSubject.value?.role === role;
+  }
+
   canManageUsers(): boolean {
     return this.hasAnyRole('super_admin', 'admin');
   }
 
+  canEditUsers(): boolean {
+    return this.hasRole('super_admin');
+  }
+
+  canManageProducts(): boolean {
+    return this.hasAnyRole('super_admin', 'admin', 'almacen');
+  }
+
   canManageInventory(): boolean {
+    return this.hasAnyRole('super_admin', 'admin', 'almacen');
+  }
+
+  canRegisterSales(): boolean {
+    return this.hasAnyRole('super_admin', 'admin', 'ventas');
+  }
+
+  canManageProcurement(): boolean {
     return this.hasAnyRole('super_admin', 'admin', 'almacen');
   }
 

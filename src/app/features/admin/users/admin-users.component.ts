@@ -22,7 +22,7 @@ export class AdminUsersComponent {
   errorMessage = '';
 
   async onRoleChange(userId: string, role: string): Promise<void> {
-    if (!isRole(role)) return;
+    if (!isRole(role) || !this.canEditUsers || (role === 'super_admin' && !this.isSuperAdmin)) return;
 
     this.errorMessage = '';
     this.busyUserId = userId;
@@ -36,6 +36,7 @@ export class AdminUsersComponent {
   }
 
   async onToggleActive(userId: string, active: boolean): Promise<void> {
+    if (!this.canEditUsers) return;
     this.errorMessage = '';
     this.busyUserId = userId;
     try {
@@ -49,6 +50,26 @@ export class AdminUsersComponent {
 
   isCurrentUser(userId: string): boolean {
     return this.authService.currentUser?.id === userId;
+  }
+
+  get isSuperAdmin(): boolean {
+    return this.authService.hasRole('super_admin');
+  }
+
+  get canEditUsers(): boolean {
+    return this.authService.canEditUsers();
+  }
+
+  canEditProfile(profile: { id: string; role: UserRole }): boolean {
+    if (!this.canEditUsers) return false;
+    if (this.isCurrentUser(profile.id)) return false;
+    return this.isSuperAdmin;
+  }
+
+  canAssignRole(role: UserRole): boolean {
+    if (!this.canEditUsers) return false;
+    if (role === 'super_admin') return this.isSuperAdmin;
+    return true;
   }
 
   countByRole(profiles: Array<{ role: UserRole }>, role: UserRole): number {

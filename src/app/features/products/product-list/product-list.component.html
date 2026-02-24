@@ -5,7 +5,7 @@
       <h1>Productos</h1>
       <p class="muted">Catálogo maestro y acceso rápido a ajustes de inventario.</p>
     </div>
-    <a class="btn btn-primary" routerLink="/products/new">Nuevo producto</a>
+    <a *ngIf="canCreateProducts" class="btn btn-primary" routerLink="/products/new">Nuevo producto</a>
   </header>
 
   <div class="card">
@@ -36,8 +36,11 @@
             </span>
           </td>
           <td class="actions">
-            <a [routerLink]="['/products', row.productId]">Editar</a>
-            <a [routerLink]="['/stock/move', row.productId]">Mover stock</a>
+            <ng-container *ngIf="canEditProducts || canMoveStock; else noActions">
+              <a *ngIf="canEditProducts" [routerLink]="['/products', row.productId]">Editar</a>
+              <a *ngIf="canMoveStock" [routerLink]="['/stock/move', row.productId]">Mover stock</a>
+            </ng-container>
+            <ng-template #noActions>-</ng-template>
           </td>
         </tr>
       </tbody>

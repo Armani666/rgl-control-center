@@ -4,7 +4,7 @@ import { guestGuard } from './core/guards/guest.guard';
 import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'products' },
+  { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   {
     path: 'auth/login',
     canActivate: [guestGuard],
@@ -12,8 +12,18 @@ export const routes: Routes = [
       import('./features/auth/login/login.component').then((m) => m.LoginComponent)
   },
   {
+    path: 'dashboard',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['super_admin', 'admin', 'ventas', 'almacen'] },
+    loadComponent: () =>
+      import('./features/dashboard/business-dashboard/business-dashboard.component').then(
+        (m) => m.BusinessDashboardComponent
+      )
+  },
+  {
     path: 'products',
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['super_admin', 'admin', 'almacen'] },
     loadComponent: () =>
       import('./features/products/product-list/product-list.component').then(
         (m) => m.ProductListComponent
@@ -21,7 +31,8 @@ export const routes: Routes = [
   },
   {
     path: 'products/new',
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['super_admin', 'admin', 'almacen'] },
     loadComponent: () =>
       import('./features/products/product-form/product-form.component').then(
         (m) => m.ProductFormComponent
@@ -29,7 +40,8 @@ export const routes: Routes = [
   },
   {
     path: 'products/:id',
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['super_admin', 'admin', 'almacen'] },
     loadComponent: () =>
       import('./features/products/product-form/product-form.component').then(
         (m) => m.ProductFormComponent
@@ -37,13 +49,15 @@ export const routes: Routes = [
   },
   {
     path: 'stock',
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['super_admin', 'admin', 'almacen'] },
     loadComponent: () =>
       import('./features/inventory/stock/stock.component').then((m) => m.StockComponent)
   },
   {
     path: 'stock/move/:productId',
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['super_admin', 'admin', 'almacen'] },
     loadComponent: () =>
       import('./features/inventory/movement-form/movement-form.component').then(
         (m) => m.MovementFormComponent

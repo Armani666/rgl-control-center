@@ -10,7 +10,9 @@
     </div>
     <div class="header-actions">
       <a class="btn btn-secondary" routerLink="/stock">Volver a inventario</a>
-      <a class="btn btn-secondary" [routerLink]="['/products', productId]">Editar producto</a>
+      <a *ngIf="canEditProduct" class="btn btn-secondary" [routerLink]="['/products', productId]">
+        Editar producto
+      </a>
     </div>
   </header>
 
