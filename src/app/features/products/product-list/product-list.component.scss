@@ -36,6 +36,15 @@ h1 {
   box-shadow: var(--shadow-soft);
 }
 
+.error-banner {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid #f4b7b7;
+  background: #fff2f2;
+  color: #8e1e1e;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -85,10 +94,28 @@ tr.alert {
   gap: 0.75rem;
 }
 
-.actions a {
+.actions a,
+.action-link {
   color: var(--accent-700);
   text-decoration: none;
   font-weight: 600;
+}
+
+.action-link {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.action-link:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.action-link.danger {
+  color: #b53333;
 }
 
 .btn {

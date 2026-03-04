@@ -71,7 +71,7 @@ export class AuthService {
   }
 
   canRegisterSales(): boolean {
-    return this.hasAnyRole('super_admin', 'admin', 'ventas');
+    return this.hasAnyRole('super_admin', 'ventas');
   }
 
   canManageProcurement(): boolean {
@@ -197,8 +197,12 @@ function mapProfile(row: Record<string, unknown>, fallbackEmail: string): UserPr
 }
 
 function toRole(value: unknown): UserRole {
-  if (value === 'super_admin' || value === 'admin' || value === 'almacen' || value === 'ventas') {
-    return value;
+  const normalized = String(value ?? '')
+    .toLowerCase()
+    .replace(/[^a-z_]/g, '');
+
+  if (normalized === 'super_admin' || normalized === 'admin' || normalized === 'almacen' || normalized === 'ventas') {
+    return normalized;
   }
 
   return 'admin';

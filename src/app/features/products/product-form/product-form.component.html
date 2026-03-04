@@ -3,7 +3,7 @@
     <div>
       <p class="eyebrow">Rose Gold Lexury</p>
       <h1>{{ isEditMode ? 'Editar producto' : 'Nuevo producto' }}</h1>
-      <p class="muted">Gestiona datos base del catálogo y el stock mínimo de alerta.</p>
+      <p class="muted">Gestiona catalogo maestro y datos de publicacion web.</p>
     </div>
     <a class="btn btn-secondary" routerLink="/products">Volver</a>
   </header>
@@ -16,12 +16,27 @@
 
     <label>
       Nombre
-      <input type="text" formControlName="name" placeholder="Anillo Rose Gold" />
+      <input type="text" formControlName="name" placeholder="Labial Velvet" />
     </label>
 
     <label>
-      Categoría
-      <input type="text" formControlName="category" placeholder="Anillos" />
+      Categoria
+      <input type="text" formControlName="category" placeholder="Labiales" />
+    </label>
+
+    <label>
+      Marca (interna)
+      <input type="text" formControlName="brand" placeholder="Rose Gold" />
+    </label>
+
+    <label>
+      Marca publica
+      <input type="text" formControlName="brandPublic" placeholder="ROSE GOLD" />
+    </label>
+
+    <label>
+      Colores
+      <input type="text" formControlName="colorsInput" placeholder="rojo, nude, coral" />
     </label>
 
     <label>
@@ -30,8 +45,46 @@
     </label>
 
     <label>
-      Stock mínimo
+      Stock minimo
       <input type="number" min="0" step="1" formControlName="minStock" />
+    </label>
+
+    <label class="full">
+      Imagen principal (image_url)
+      <input type="url" formControlName="imageUrl" placeholder="https://..." />
+      <div class="upload-row">
+        <input
+          type="file"
+          accept="image/*"
+          (change)="uploadCoverFromFile($event)"
+          [disabled]="saving || loading || uploadingCover"
+        />
+        <span class="upload-status">{{ uploadingCover ? 'Subiendo portada...' : 'Subir a Storage (opcional)' }}</span>
+      </div>
+    </label>
+
+    <label class="full">
+      Galeria (image_urls)
+      <textarea
+        rows="4"
+        formControlName="imageUrlsInput"
+        placeholder="Una URL por linea o separadas por coma"
+      ></textarea>
+      <div class="upload-row">
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          (change)="uploadGalleryFromFiles($event)"
+          [disabled]="saving || loading || uploadingGallery"
+        />
+        <span class="upload-status">{{ uploadingGallery ? 'Subiendo galeria...' : 'Subir imagenes a Storage (opcional)' }}</span>
+      </div>
+    </label>
+
+    <label class="full">
+      Descripcion
+      <textarea rows="4" formControlName="description" placeholder="Detalles del producto"></textarea>
     </label>
 
     <label class="checkbox">
@@ -39,13 +92,8 @@
       Activo
     </label>
 
-    <label class="full">
-      Descripción
-      <textarea rows="4" formControlName="description" placeholder="Detalles del producto"></textarea>
-    </label>
-
     <div class="full helper" *ngIf="form.invalid && form.touched">
-      Revisa los campos requeridos (`SKU`, `Nombre`, `Precio`, `Stock mínimo`).
+      Revisa los campos requeridos (`SKU`, `Nombre`, `Precio`, `Stock minimo`).
     </div>
 
     <div class="full helper error" *ngIf="errorMessage">{{ errorMessage }}</div>

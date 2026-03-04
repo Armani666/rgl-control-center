@@ -8,8 +8,12 @@ export interface Product {
   cost?: number;
   barcode?: string;
   brand?: string;
+  brandPublic?: string;
   unit?: string;
   location?: string;
+  imageUrl?: string;
+  imageUrls?: string[];
+  colors?: string[];
   supplierId?: string | null;
   leadTimeDays?: number;
   minStock: number;
@@ -27,8 +31,12 @@ export interface ProductPayload {
   cost?: number;
   barcode?: string;
   brand?: string;
+  brandPublic?: string;
   unit?: string;
   location?: string;
+  imageUrl?: string;
+  imageUrls?: string[];
+  colors?: string[];
   supplierId?: string | null;
   leadTimeDays?: number;
   minStock: number;

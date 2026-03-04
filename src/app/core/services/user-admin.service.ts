@@ -15,10 +15,10 @@ export class UserAdminService {
   async updateUserRole(userId: string, role: UserRole): Promise<void> {
     assertSupabaseConfigured();
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ role, updated_at: new Date().toISOString() })
-      .eq('id', userId);
+    const { error } = await supabase.rpc('admin_set_user_role', {
+      p_user_id: userId,
+      p_role: role
+    });
 
     if (error) {
       throw new Error(error.message);
@@ -76,8 +76,12 @@ function mapProfile(row: Record<string, unknown>): UserProfile {
 }
 
 function toRole(value: unknown): UserRole {
-  if (value === 'super_admin' || value === 'admin' || value === 'almacen' || value === 'ventas') {
-    return value;
+  const normalized = String(value ?? '')
+    .toLowerCase()
+    .replace(/[^a-z_]/g, '');
+
+  if (normalized === 'super_admin' || normalized === 'admin' || normalized === 'almacen' || normalized === 'ventas') {
+    return normalized;
   }
 
   return 'admin';

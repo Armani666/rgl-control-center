@@ -75,6 +75,7 @@ export class VendorCommissionsComponent {
   errorMessage = '';
   successMessage = '';
   private sellerDefaultRates = new Map<string, number>();
+  private productCatalog = new Map<string, { name: string; sku: string; price: number }>();
 
   readonly dashboard$ = combineLatest([
     this.salesCommissionService.getSalesRecords$(),
@@ -119,6 +120,29 @@ export class VendorCommissionsComponent {
     this.saleForm.controls.goalReached.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.applyCommissionPreset());
+
+    this.productService
+      .getProducts$()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((products) => {
+        this.productCatalog = new Map(
+          products
+            .filter((product) => product.active)
+            .map((product) => [
+              product.id,
+              { name: product.name, sku: product.sku, price: Number(product.price ?? 0) }
+            ])
+        );
+        this.syncSelectedProductDetails();
+      });
+
+    this.saleForm.controls.productId.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.syncSelectedProductDetails());
+
+    this.saleForm.controls.quantity.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.syncSelectedProductDetails());
   }
 
   get estimatedCommission(): number {
@@ -129,7 +153,7 @@ export class VendorCommissionsComponent {
   }
 
   get canManageCommissionPayments(): boolean {
-    return this.authService.hasAnyRole('super_admin', 'admin');
+    return this.authService.hasRole('super_admin');
   }
 
   async submitSale(): Promise<void> {
@@ -139,6 +163,10 @@ export class VendorCommissionsComponent {
     if (this.saleForm.invalid) return;
 
     const raw = this.saleForm.getRawValue();
+    if (!raw.productId && !raw.productName.trim()) {
+      this.errorMessage = 'Selecciona un producto o captura una referencia de producto.';
+      return;
+    }
     this.savingSale = true;
     try {
       await this.salesCommissionService.createSalesRecord({
@@ -171,6 +199,10 @@ export class VendorCommissionsComponent {
     } finally {
       this.savingSale = false;
     }
+  }
+
+  get isCatalogProductSelected(): boolean {
+    return !!this.saleForm.controls.productId.value;
   }
 
   async submitPayment(): Promise<void> {
@@ -291,7 +323,7 @@ export class VendorCommissionsComponent {
               <p class="label">Detalle</p>
               <p class="value">Folio: ${escapeHtml(String(row.id || '').slice(0, 8).toUpperCase())}</p>
               <p class="muted">Fecha: ${escapeHtml(saleDate ? formatDateHuman(saleDate) : '-')}</p>
-              <p class="muted">Vendedor: ${escapeHtml(row.sellerName || '')}</p>
+              <p class="muted">Vendedor: ${escapeHtml(resolveSellerLabel(row))}</p>
             </div>
           </div>
           <table>
@@ -340,6 +372,25 @@ export class VendorCommissionsComponent {
     const baseRate = Number.isFinite(sellerRate as number) ? Number(sellerRate) : BASE_COMMISSION_RATE;
     const rate = goalReached ? GOAL_COMMISSION_RATE : baseRate;
     this.saleForm.patchValue({ commissionRate: rate }, { emitEvent: false });
+  }
+
+  private syncSelectedProductDetails(): void {
+    const selectedProductId = this.saleForm.controls.productId.value;
+    if (!selectedProductId) {
+      return;
+    }
+
+    const selectedProduct = this.productCatalog.get(selectedProductId);
+    if (!selectedProduct) {
+      return;
+    }
+
+    const label = selectedProduct.sku
+      ? `${selectedProduct.name} (${selectedProduct.sku})`
+      : selectedProduct.name;
+    const quantity = Math.max(1, Math.floor(Number(this.saleForm.controls.quantity.value || 1)));
+    const totalAmount = Number((selectedProduct.price * quantity).toFixed(2));
+    this.saleForm.patchValue({ productName: label, totalAmount }, { emitEvent: false });
   }
 }
 
@@ -555,4 +606,13 @@ function escapeHtml(value: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function resolveSellerLabel(row: { sellerName?: string; sellerEmail?: string }): string {
+  const sellerName = String(row.sellerName ?? '').trim();
+  const sellerEmail = String(row.sellerEmail ?? '').trim().toLowerCase();
+  if (sellerName && sellerName !== sellerEmail) {
+    return sellerName;
+  }
+  return 'Asesor de ventas';
 }

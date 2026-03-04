@@ -19,5 +19,5 @@ export const roleGuard: CanActivateFn = async (route, _state) => {
     return authService.currentSession ? true : router.createUrlTree(['/auth/login']);
   }
 
-  return authService.hasAnyRole(...requiredRoles) ? true : router.createUrlTree(['/stock']);
+  return authService.hasAnyRole(...requiredRoles) ? true : router.createUrlTree(['/dashboard']);
 };

@@ -1,4 +1,4 @@
-import { AsyncPipe, CurrencyPipe, DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, CurrencyPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { combineLatest, map } from 'rxjs';
@@ -9,7 +9,7 @@ import { SupplierService } from '../../../core/services/supplier.service';
 
 @Component({
   selector: 'app-procurement-dashboard',
-  imports: [AsyncPipe, CurrencyPipe, DecimalPipe, NgClass, NgFor, NgIf, ReactiveFormsModule],
+  imports: [AsyncPipe, CurrencyPipe, NgClass, NgFor, NgIf, ReactiveFormsModule],
   templateUrl: './procurement-dashboard.component.html',
   styleUrl: './procurement-dashboard.component.scss'
 })

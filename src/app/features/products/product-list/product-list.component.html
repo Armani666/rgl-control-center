@@ -8,6 +8,8 @@
     <a *ngIf="canCreateProducts" class="btn btn-primary" routerLink="/products/new">Nuevo producto</a>
   </header>
 
+  <p *ngIf="deletionError" class="error-banner">{{ deletionError }}</p>
+
   <div class="card">
     <table>
       <thead>
@@ -39,6 +41,15 @@
             <ng-container *ngIf="canEditProducts || canMoveStock; else noActions">
               <a *ngIf="canEditProducts" [routerLink]="['/products', row.productId]">Editar</a>
               <a *ngIf="canMoveStock" [routerLink]="['/stock/move', row.productId]">Mover stock</a>
+              <button
+                *ngIf="canEditProducts"
+                type="button"
+                class="action-link danger"
+                [disabled]="isDeleting(row.productId)"
+                (click)="deleteProduct(row)"
+              >
+                {{ isDeleting(row.productId) ? 'Eliminando...' : 'Eliminar' }}
+              </button>
             </ng-container>
             <ng-template #noActions>-</ng-template>
           </td>

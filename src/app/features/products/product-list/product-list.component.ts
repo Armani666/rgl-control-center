@@ -1,4 +1,4 @@
-import { AsyncPipe, CurrencyPipe, NgClass, NgFor } from '@angular/common';
+import { AsyncPipe, CurrencyPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { combineLatest, map } from 'rxjs';
@@ -14,7 +14,7 @@ interface ProductListRow extends StockOverview {
 
 @Component({
   selector: 'app-product-list',
-  imports: [AsyncPipe, CurrencyPipe, NgClass, NgFor, RouterLink],
+  imports: [AsyncPipe, CurrencyPipe, NgClass, NgFor, NgIf, RouterLink],
   templateUrl: './product-list.component.html',
   styleUrl: './product-list.component.scss'
 })
@@ -22,6 +22,9 @@ export class ProductListComponent {
   private readonly productService = inject(ProductService);
   private readonly inventoryService = inject(InventoryService);
   private readonly authService = inject(AuthService);
+  private readonly deletingIds = new Set<string>();
+
+  deletionError: string | null = null;
 
   readonly rows$ = combineLatest([
     this.productService.getProducts$(),
@@ -58,5 +61,36 @@ export class ProductListComponent {
 
   get canMoveStock(): boolean {
     return this.authService.canManageInventory();
+  }
+
+  isDeleting(productId: string): boolean {
+    return this.deletingIds.has(productId);
+  }
+
+  async deleteProduct(row: ProductListRow): Promise<void> {
+    if (!this.canEditProducts || this.deletingIds.has(row.productId)) {
+      return;
+    }
+
+    const productLabel = row.sku || row.productName;
+    const confirmed = window.confirm(
+      `Esto eliminara el producto ${productLabel} y su historial relacionado. Esta accion no se puede deshacer. Deseas continuar?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.deletionError = null;
+    this.deletingIds.add(row.productId);
+
+    try {
+      await this.productService.deleteProduct(row.productId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No se pudo eliminar el producto.';
+      this.deletionError = message;
+    } finally {
+      this.deletingIds.delete(row.productId);
+    }
   }
 }

@@ -91,11 +91,13 @@ export const routes: Routes = [
   {
     path: 'sales/commissions',
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['super_admin', 'admin', 'ventas'] },
+    data: { roles: ['super_admin', 'ventas'] },
     loadComponent: () =>
       import('./features/sales/vendor-commissions/vendor-commissions.component').then(
         (m) => m.VendorCommissionsComponent
       )
   },
+  { path: 'sales', pathMatch: 'full', redirectTo: 'sales/commissions' },
+  { path: 'ventas', pathMatch: 'full', redirectTo: 'sales/commissions' },
   { path: '**', redirectTo: 'products' }
 ];

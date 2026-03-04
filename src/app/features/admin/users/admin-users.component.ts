@@ -17,17 +17,25 @@ export class AdminUsersComponent {
   readonly profiles$ = this.userAdminService.getProfiles$();
   readonly roles: UserRole[] = ['super_admin', 'admin', 'almacen', 'ventas'];
   readonly roleLabels = roleLabels;
+  readonly pendingRoles = new Map<string, UserRole>();
 
   busyUserId = '';
   errorMessage = '';
 
-  async onRoleChange(userId: string, role: string): Promise<void> {
-    if (!isRole(role) || !this.canEditUsers || (role === 'super_admin' && !this.isSuperAdmin)) return;
+  onRoleSelected(userId: string, role: string): void {
+    if (!isRole(role)) return;
+    this.pendingRoles.set(userId, role);
+  }
+
+  async onRoleChange(userId: string): Promise<void> {
+    const role = this.pendingRoles.get(userId);
+    if (!role) return;
 
     this.errorMessage = '';
     this.busyUserId = userId;
     try {
       await this.userAdminService.updateUserRole(userId, role);
+      this.pendingRoles.delete(userId);
     } catch (error) {
       this.errorMessage = error instanceof Error ? error.message : 'No se pudo actualizar el rol.';
     } finally {
@@ -36,7 +44,6 @@ export class AdminUsersComponent {
   }
 
   async onToggleActive(userId: string, active: boolean): Promise<void> {
-    if (!this.canEditUsers) return;
     this.errorMessage = '';
     this.busyUserId = userId;
     try {
@@ -61,15 +68,15 @@ export class AdminUsersComponent {
   }
 
   canEditProfile(profile: { id: string; role: UserRole }): boolean {
-    if (!this.canEditUsers) return false;
-    if (this.isCurrentUser(profile.id)) return false;
-    return this.isSuperAdmin;
+    return true;
   }
 
   canAssignRole(role: UserRole): boolean {
-    if (!this.canEditUsers) return false;
-    if (role === 'super_admin') return this.isSuperAdmin;
     return true;
+  }
+
+  getPendingRole(userId: string, currentRole: UserRole): UserRole {
+    return this.pendingRoles.get(userId) ?? currentRole;
   }
 
   countByRole(profiles: Array<{ role: UserRole }>, role: UserRole): number {
