@@ -21,7 +21,7 @@ export class ProductFormComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly form = this.fb.nonNullable.group({
-    sku: ['', [Validators.required, Validators.maxLength(40)]],
+    sku: ['', [Validators.maxLength(40)]],
     name: ['', [Validators.required, Validators.maxLength(120)]],
     category: ['', [Validators.maxLength(60)]],
     brand: ['', [Validators.maxLength(120)]],
@@ -44,11 +44,19 @@ export class ProductFormComponent {
   errorMessage = '';
 
   constructor() {
+    this.form.controls.brand.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.refreshSkuPreview();
+    });
+    this.form.controls.brandPublic.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.refreshSkuPreview();
+    });
+
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(async (params) => {
       const id = params.get('id');
       if (!id) {
         this.isEditMode = false;
         this.productId = null;
+        this.refreshSkuPreview();
         return;
       }
 
@@ -121,6 +129,15 @@ export class ProductFormComponent {
     }
   }
 
+  get coverPreviewUrl(): string | null {
+    const cover = this.form.controls.imageUrl.value.trim();
+    return isImageUrl(cover) ? cover : null;
+  }
+
+  get galleryPreviewUrls(): string[] {
+    return splitValues(this.form.controls.imageUrlsInput.value).filter((url) => isImageUrl(url));
+  }
+
   async uploadCoverFromFile(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -168,6 +185,14 @@ export class ProductFormComponent {
     const sku = this.form.controls.sku.value;
     return this.productId ?? sku ?? 'draft';
   }
+
+  private refreshSkuPreview(): void {
+    if (this.isEditMode) {
+      return;
+    }
+    const brandCandidate = this.form.controls.brand.value || this.form.controls.brandPublic.value;
+    this.form.controls.sku.setValue(buildSkuPreview(brandCandidate), { emitEvent: false });
+  }
 }
 
 function extractErrorMessage(error: unknown): string {
@@ -186,4 +211,28 @@ function splitValues(raw: string): string[] {
 
 function uniqueStrings(values: string[]): string[] {
   return Array.from(new Set(values.map((item) => item.trim()).filter(Boolean)));
+}
+
+function buildSkuPreview(brand: string): string {
+  const code = toBrandCode(brand);
+  return `RGL-${code}01`;
+}
+
+function toBrandCode(value: string): string {
+  const normalized = value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
+
+  if (!normalized) {
+    return 'GEN';
+  }
+
+  return normalized.slice(0, 3).padEnd(3, 'X');
+}
+
+function isImageUrl(value: string): boolean {
+  if (!value) return false;
+  return /^https?:\/\/.+\.(png|jpe?g|webp|gif|avif)(\?.*)?$/i.test(value);
 }

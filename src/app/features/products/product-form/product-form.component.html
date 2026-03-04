@@ -11,7 +11,8 @@
   <form class="card form-grid" [formGroup]="form" (ngSubmit)="submit()">
     <label>
       SKU
-      <input type="text" formControlName="sku" placeholder="RGL-001" />
+      <input type="text" formControlName="sku" placeholder="RGL-MAY01" [readonly]="!isEditMode" />
+      <span class="helper">Se genera automaticamente por marca al crear el producto.</span>
     </label>
 
     <label>
@@ -52,6 +53,9 @@
     <label class="full">
       Imagen principal (image_url)
       <input type="url" formControlName="imageUrl" placeholder="https://..." />
+      <div class="preview-card" *ngIf="coverPreviewUrl as cover">
+        <img [src]="cover" alt="Vista previa portada del producto" loading="lazy" />
+      </div>
       <div class="upload-row">
         <input
           type="file"
@@ -80,6 +84,11 @@
         />
         <span class="upload-status">{{ uploadingGallery ? 'Subiendo galeria...' : 'Subir imagenes a Storage (opcional)' }}</span>
       </div>
+      <div class="preview-grid" *ngIf="galleryPreviewUrls.length > 0">
+        <div class="preview-card" *ngFor="let url of galleryPreviewUrls">
+          <img [src]="url" alt="Vista previa de imagen de galeria" loading="lazy" />
+        </div>
+      </div>
     </label>
 
     <label class="full">
@@ -93,7 +102,7 @@
     </label>
 
     <div class="full helper" *ngIf="form.invalid && form.touched">
-      Revisa los campos requeridos (`SKU`, `Nombre`, `Precio`, `Stock minimo`).
+      Revisa los campos requeridos (`Nombre`, `Precio`, `Stock minimo`).
     </div>
 
     <div class="full helper error" *ngIf="errorMessage">{{ errorMessage }}</div>

@@ -37,6 +37,7 @@ export class ProductService {
     assertSupabaseConfigured();
 
     const now = new Date().toISOString();
+    const brandName = payload.brand?.trim() || payload.brandPublic?.trim() || '';
     const normalized = {
       sku: payload.sku.trim(),
       name: payload.name.trim(),
@@ -56,6 +57,10 @@ export class ProductService {
     };
 
     if (id) {
+      if (!normalized.sku) {
+        normalized.sku = await this.getNextSkuForBrand(brandName);
+      }
+
       const { error: productError } = await supabase.from('products').update(normalized).eq('id', id);
       if (productError) {
         throw new Error(productError.message);
@@ -80,15 +85,32 @@ export class ProductService {
     }
 
     const createdId = crypto.randomUUID();
+    let createErrorMessage: string | null = null;
 
-    const { error: createError } = await supabase.from('products').insert({
-      id: createdId,
-      ...normalized,
-      created_at: now
-    });
+    for (let attempt = 0; attempt < 4; attempt++) {
+      normalized.sku = await this.getNextSkuForBrand(brandName);
 
-    if (createError) {
+      const { error: createError } = await supabase.from('products').insert({
+        id: createdId,
+        ...normalized,
+        created_at: now
+      });
+
+      if (!createError) {
+        createErrorMessage = null;
+        break;
+      }
+
+      if (this.isUniqueViolation(createError.message) && attempt < 3) {
+        createErrorMessage = createError.message;
+        continue;
+      }
+
       throw new Error(createError.message);
+    }
+
+    if (createErrorMessage) {
+      throw new Error(createErrorMessage);
     }
 
     const { error: stockCreateError } = await supabase.from('stock').upsert(
@@ -264,6 +286,33 @@ export class ProductService {
       updatedAt: toDate(row['updated_at'])
     };
   }
+
+  private async getNextSkuForBrand(brandName: string): Promise<string> {
+    const code = toBrandCode(brandName);
+    const prefix = `RGL-${code}`;
+    const skuRegex = new RegExp(`^${escapeRegExp(prefix)}(\\d+)$`, 'i');
+    const { data, error } = await supabase.from('products').select('sku').ilike('sku', `${prefix}%`);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const maxSequence = (data ?? []).reduce((max, row) => {
+      const sku = String((row as Record<string, unknown>)['sku'] ?? '').trim();
+      const match = sku.match(skuRegex);
+      if (!match) return max;
+      const parsed = Number(match[1]);
+      if (!Number.isFinite(parsed)) return max;
+      return Math.max(max, parsed);
+    }, 0);
+
+    return `${prefix}${String(maxSequence + 1).padStart(2, '0')}`;
+  }
+
+  private isUniqueViolation(message: string): boolean {
+    const normalized = message.toLowerCase();
+    return normalized.includes('duplicate key') || normalized.includes('products_sku_key');
+  }
 }
 
 function toDate(value: unknown): Date | null {
@@ -308,4 +357,22 @@ function getFileExtension(fileName: string): string {
   const ext = parts.length > 1 ? parts.pop() : null;
   if (!ext) return 'jpg';
   return ext.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+}
+
+function toBrandCode(value: string): string {
+  const normalized = value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
+
+  if (!normalized) {
+    return 'GEN';
+  }
+
+  return normalized.slice(0, 3).padEnd(3, 'X');
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
